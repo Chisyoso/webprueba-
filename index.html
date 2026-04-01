@@ -11,36 +11,26 @@ body {
     color: #333;
     padding: 20px;
 }
-
 h1 { color: #0f9d58; }
-
-#feedback {
-    margin-top: 30px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #0f9d58;
-}
-
 .button-box {
     display: flex;
     justify-content: center;
     gap: 20px;
     margin-top: 40px;
 }
-
-.button-box div {
+.button-box a {
+    display: inline-block;
     width: 80px;
     height: 80px;
+    line-height: 80px;
     border-radius: 50%;
     background: #e0e0e0;
-    line-height: 80px;
+    text-decoration: none;
+    color: #333;
     font-size: 24px;
-    cursor: pointer;
-    user-select: none;
     transition: all 0.2s;
 }
-
-.button-box div.active {
+.button-box a:active {
     background: #0f9d58;
     color: white;
     transform: scale(1.2);
@@ -49,18 +39,47 @@ h1 { color: #0f9d58; }
 </head>
 <body>
 <h1>Control RGB con PS4</h1>
-
-<p>Presiona Triángulo, X, Cuadrado o Círculo en tu control</p>
+<p>Presiona Triángulo, X, Cuadrado o Círculo</p>
 
 <div class="button-box">
-    <div id="triangulo">▲</div>
-    <div id="x">✖</div>
-    <div id="cuadrado">■</div>
-    <div id="circulo">●</div>
+    <a id="triangulo" href="#">▲</a>
+    <a id="x" href="#">✖</a>
+    <a id="cuadrado" href="#">■</a>
+    <a id="circulo" href="#">●</a>
 </div>
 
-<p id="feedback">Esperando comando...</p>
+<script>
+// Cambia la IP de tu ESP
+const BASE_IP = "192.168.1.7";
+const BASE_URL = "http://" + BASE_IP + "/";
 
-<script src="script.js"></script>
+// Mapear botones PS4 a comandos
+const botones = {
+    "triangulo": "UP",
+    "x": "DOWN",
+    "cuadrado": "LEFTH",
+    "circulo": "RIGHT"
+};
+
+// Asignar redirección a cada botón visual
+for (const id in botones) {
+    const cmd = botones[id];
+    document.getElementById(id).addEventListener("click", () => {
+        window.location.href = BASE_URL + cmd;
+    });
+}
+
+// Gamepad API: redirige al presionar un botón
+setInterval(() => {
+    const gp = navigator.getGamepads()[0];
+    if(!gp) return;
+
+    // Botones PS4: Triángulo 3, X 0, Cuadrado 2, Círculo 1
+    if(gp.buttons[3].pressed) window.location.href = BASE_URL + "UP";      // Triángulo
+    else if(gp.buttons[0].pressed) window.location.href = BASE_URL + "DOWN"; // X
+    else if(gp.buttons[2].pressed) window.location.href = BASE_URL + "LEFTH"; // Cuadrado
+    else if(gp.buttons[1].pressed) window.location.href = BASE_URL + "RIGHT"; // Círculo
+}, 150);
+</script>
 </body>
 </html>
