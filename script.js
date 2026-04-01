@@ -1,38 +1,47 @@
+// Cambia la IP de tu ESP aquí
 const BASE_IP = "192.168.1.7";
 const BASE_URL = "http://" + BASE_IP + "/";
-let ultimoComando = ""; // último comando enviado
 
-// Enviar comando al ESP
+let ultimoComando = "";
+
+// Función para enviar comando al ESP
 function enviar(comando) {
     if(comando && comando !== ultimoComando){
         let img = new Image();
-        img.src = BASE_URL + comando; // HTTP GET al ESP
+        img.src = BASE_URL + comando;  // HTTP GET al ESP
         ultimoComando = comando;
         console.log("Enviado:", comando);
+        document.getElementById("feedback").innerText = "Comando: " + comando;
+        activarBotonVisual(comando);
     }
 }
 
-// Función para leer joystick (simulado con Gamepad API)
-function leerJoystick() {
-    const gamepads = navigator.getGamepads();
-    if(!gamepads) return;
-
-    const gp = gamepads[0];
-    if(!gp) return;
-
-    let comando = "";
-
-    const x = gp.axes[0]; // joystick horizontal
-    const y = gp.axes[1]; // joystick vertical
-    const deadzone = 0.2; // zona muerta
-
-    if(y < -deadzone) comando = "UP";
-    else if(y > deadzone) comando = "DOWN";
-    else if(x < -deadzone) comando = "LEFTH";
-    else if(x > deadzone) comando = "RIGHT";
-
-    enviar(comando);
+// Feedback visual en los botones
+function activarBotonVisual(comando){
+    const botones = { "UP":"triangulo", "DOWN":"x", "LEFTH":"cuadrado", "RIGHT":"circulo" };
+    for(const id of Object.values(botones)){
+        document.getElementById(id).classList.remove("active");
+    }
+    if(botones[comando]){
+        document.getElementById(botones[comando]).classList.add("active");
+        setTimeout(() => document.getElementById(botones[comando]).classList.remove("active"), 200);
+    }
 }
 
-// Iniciar loop de joystick cada 200 ms
-setInterval(leerJoystick, 200);
+// Gamepad API
+window.addEventListener("gamepadconnected", (e) => {
+    console.log("Control conectado:", e.gamepad);
+    document.getElementById("feedback").innerText = "Control conectado: " + e.gamepad.id;
+});
+
+// Loop para leer botones cada 100ms
+setInterval(() => {
+    const gp = navigator.getGamepads()[0];
+    if(!gp) return;
+
+    // Botones PS4: Triángulo 3, X 0, Cuadrado 2, Círculo 1
+    if(gp.buttons[3].pressed) enviar("UP");      // Triángulo
+    else if(gp.buttons[0].pressed) enviar("DOWN"); // X
+    else if(gp.buttons[2].pressed) enviar("LEFTH"); // Cuadrado
+    else if(gp.buttons[1].pressed) enviar("RIGHT"); // Círculo
+}, 100);
