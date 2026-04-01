@@ -39,12 +39,10 @@ function iniciarControl() {
         else if (x < -0.5) comando = "LEFTH";
         else if (x > 0.5) comando = "RIGHT";
 
-        // 🚀 ENVIAR SOLO SI CAMBIA
-        if (comando !== "" && comando !== ultimoComando) {
-            enviar(comando);
-            document.getElementById("estado").innerText = "Enviado: " + comando;
-            ultimoComando = comando;
-        }
+        function enviar(comando) {
+    let img = new Image();
+    img.src = BASE_URL + comando;
+}
 
         // 🔄 CENTRO
         if (comando === "" && ultimoComando !== "") {
