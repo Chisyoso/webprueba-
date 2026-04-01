@@ -1,12 +1,7 @@
-
-const BASE_IP = "192.168.1.7"; // ← SOLO cambias esto
+// CONFIGURACIÓN
+const BASE_IP = "192.168.1.7";
 const BASE_URL = "http://" + BASE_IP + "/";
 
-
-
-function enviarComando(comando) {
-    window.location.href = BASE_URL + comando;
-}
 let ultimoComando = "";
 
 function iniciarControl() {
@@ -29,19 +24,19 @@ function iniciarControl() {
         else if (x < -0.5) comando = "LEFTH";
         else if (x > 0.5) comando = "RIGHT";
 
-        // SOLO enviar si cambia (evita spam)
+        // Evita enviar lo mismo muchas veces
         if (comando !== "" && comando !== ultimoComando) {
             fetch(BASE_URL + comando);
             document.getElementById("estado").innerText = "Enviado: " + comando;
             ultimoComando = comando;
         }
 
-        // Si está en centro → no enviar nada
-        if (comando === "") {
+        // Cuando vuelve al centro
+        if (comando === "" && ultimoComando !== "") {
+            fetch(BASE_URL + "STOP"); // opcional si lo usas en Arduino
+            document.getElementById("estado").innerText = "Centro (detenido)";
             ultimoComando = "";
-            document.getElementById("estado").innerText = "Centro (sin comando)";
         }
 
     }, 150);
 }
-
