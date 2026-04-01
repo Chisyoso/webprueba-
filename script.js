@@ -1,55 +1,38 @@
-// CONFIG
 const BASE_IP = "192.168.1.7";
 const BASE_URL = "http://" + BASE_IP + "/";
+let ultimoComando = ""; // último comando enviado
 
-let ultimoComando = "";
-
-// ENVÍO sin CORS
+// Enviar comando al ESP
 function enviar(comando) {
-    document.getElementById("esp").src = BASE_URL + comando;
+    if(comando && comando !== ultimoComando){
+        let img = new Image();
+        img.src = BASE_URL + comando; // HTTP GET al ESP
+        ultimoComando = comando;
+        console.log("Enviado:", comando);
+    }
 }
 
-function iniciarControl() {
+// Función para leer joystick (simulado con Gamepad API)
+function leerJoystick() {
+    const gamepads = navigator.getGamepads();
+    if(!gamepads) return;
 
-    window.addEventListener("gamepadconnected", () => {
-        document.getElementById("estado").innerText = "Control conectado 🎮";
-    });
+    const gp = gamepads[0];
+    if(!gp) return;
 
-    setInterval(() => {
-        const gp = navigator.getGamepads()[0];
-        if (!gp) return;
+    let comando = "";
 
-        let x = gp.axes[0]; // -1 a 1
-        let y = gp.axes[1]; // -1 a 1
+    const x = gp.axes[0]; // joystick horizontal
+    const y = gp.axes[1]; // joystick vertical
+    const deadzone = 0.2; // zona muerta
 
-        // 🎮 MOVER PUNTO VISUAL
-        let punto = document.getElementById("punto");
+    if(y < -deadzone) comando = "UP";
+    else if(y > deadzone) comando = "DOWN";
+    else if(x < -deadzone) comando = "LEFTH";
+    else if(x > deadzone) comando = "RIGHT";
 
-        let posX = 80 + (x * 60);
-        let posY = 80 + (y * 60);
-
-        punto.style.left = posX + "px";
-        punto.style.top = posY + "px";
-
-        // 🧠 DETECTAR DIRECCIÓN
-        let comando = "";
-
-        if (y < -0.5) comando = "UP";
-        else if (y > 0.5) comando = "DOWN";
-        else if (x < -0.5) comando = "LEFTH";
-        else if (x > 0.5) comando = "RIGHT";
-
-        function enviar(comando) {
-    let img = new Image();
-    img.src = BASE_URL + comando;
+    enviar(comando);
 }
 
-        // 🔄 CENTRO
-        if (comando === "" && ultimoComando !== "") {
-            enviar("STOP"); // opcional
-            document.getElementById("estado").innerText = "Centro";
-            ultimoComando = "";
-        }
-
-    }, 100);
-}
+// Iniciar loop de joystick cada 200 ms
+setInterval(leerJoystick, 200);
