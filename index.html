@@ -3,15 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <title>PS4 RGB Control</title>
+
 <style>
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     text-align: center;
-    background: #f0f4f8;
-    color: #333;
+    background: #0f172a;
+    color: white;
     padding: 20px;
 }
-h1 { color: #0f9d58; margin-bottom: 10px; }
+
+h1 { color: #22c55e; }
 
 .button-box {
     display: flex;
@@ -20,110 +22,116 @@ h1 { color: #0f9d58; margin-bottom: 10px; }
     margin-top: 40px;
 }
 
-.button-box a {
-    display: inline-block;
+.button-box div {
     width: 80px;
     height: 80px;
     line-height: 80px;
     border-radius: 50%;
-    background: #e0e0e0;
-    text-decoration: none;
-    color: #333;
+    background: #1e293b;
     font-size: 24px;
-    transition: all 0.3s;
-    user-select: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-.button-box a.active {
-    background: #0f9d58;
-    color: white;
-    transform: scale(1.3) rotate(-5deg);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-}
-
-.button-box a:disabled {
-    pointer-events: none;
-    opacity: 0.5;
+.active {
+    transform: scale(1.3);
+    background: #22c55e;
+    box-shadow: 0 0 25px #22c55e;
 }
 
 #feedback {
     margin-top: 30px;
     font-size: 20px;
-    font-weight: bold;
-    color: #0f9d58;
+    color: #22c55e;
 }
 </style>
+
 </head>
 <body>
-<h1>Control RGB con PS4</h1>
-<p>Presiona Triángulo, X, Cuadrado o Círculo</p>
+
+<h1>🎮 Control RGB PRO</h1>
+<p>Presiona botones del control</p>
 
 <div class="button-box">
-    <a id="triangulo" href="#">▲</a>
-    <a id="x" href="#">✖</a>
-    <a id="cuadrado" href="#">■</a>
-    <a id="circulo" href="#">●</a>
+    <div id="triangulo">▲</div>
+    <div id="x">✖</div>
+    <div id="cuadrado">■</div>
+    <div id="circulo">●</div>
 </div>
 
-<p id="feedback">Esperando comando...</p>
+<p id="feedback">Esperando...</p>
 
 <script>
-// ==================== CONFIG ====================
-const BASE_IP = "192.168.1.7";  // IP de tu ESP
-const BASE_URL = "http://" + BASE_IP + "/";
-const COOLDOWN = 1000; // ms entre comandos
+const BASE_URL = "http://192.168.1.7/";
 
 let bloqueado = false;
+let botonPresionado = false; // 🔥 clave
 let ultimoComando = "";
 
-// Mapeo visual de botones
-const botones = {
-    "triangulo": "UP",
-    "x": "DOWN",
-    "cuadrado": "LEFTH",
-    "circulo": "RIGHT"
-};
+// Activar animación
+function animar(id, texto){
+    let el = document.getElementById(id);
+    el.classList.add("active");
+    document.getElementById("feedback").innerText = texto;
 
-// ==================== FUNCIONES ====================
-function enviarComando(cmd, botonId){
-    if(bloqueado) return;   // Si está bloqueado, no hace nada
-    bloqueado = true;       // Bloqueamos temporalmente
+    setTimeout(() => el.classList.remove("active"), 300);
+}
 
-    // Redirección al ESP
+// Enviar comando REAL
+function enviar(cmd, id){
+    if(bloqueado || cmd === ultimoComando) return;
+
+    bloqueado = true;
+    ultimoComando = cmd;
+
+    animar(id, "Comando: " + cmd);
+
+    // 🔥 REDIRECCIÓN (único método que te funciona)
     window.location.href = BASE_URL + cmd;
-    
-    // Animación del botón
-    const boton = document.getElementById(botonId);
-    boton.classList.add("active");
-    document.getElementById("feedback").innerText = "Comando: " + cmd;
-
-    // Desbloqueo y quitar animación después de COOLDOWN
-    setTimeout(() => {
-        boton.classList.remove("active");
-        bloqueado = false;
-    }, COOLDOWN);
 }
 
-// ==================== BOTONES EN PANTALLA ====================
-for(const id in botones){
-    const cmd = botones[id];
-    document.getElementById(id).addEventListener("click", () => {
-        enviarComando(cmd, id);
-    });
-}
-
-// ==================== GAMEPAD ====================
+// Gamepad loop
 setInterval(() => {
-    if(bloqueado) return; // Evitar repetir comandos
     const gp = navigator.getGamepads()[0];
     if(!gp) return;
 
-    if(gp.buttons[3].pressed) enviarComando("UP","triangulo");      // Triángulo
-    else if(gp.buttons[0].pressed) enviarComando("DOWN","x");        // X
-    else if(gp.buttons[2].pressed) enviarComando("LEFTH","cuadrado"); // Cuadrado
-    else if(gp.buttons[1].pressed) enviarComando("RIGHT","circulo"); // Círculo
+    // Detectar si TODOS están sueltos
+    const ningunoPresionado = !gp.buttons[0].pressed &&
+                              !gp.buttons[1].pressed &&
+                              !gp.buttons[2].pressed &&
+                              !gp.buttons[3].pressed;
+
+    // 🔥 RESETEAR cuando sueltas
+    if(ningunoPresionado){
+        botonPresionado = false;
+        bloqueado = false;
+        ultimoComando = "";
+        return;
+    }
+
+    // 🔥 EVITAR repetir mientras esté presionado
+    if(botonPresionado) return;
+
+    // Detectar nuevo click
+    if(gp.buttons[3].pressed){
+        enviar("UP","triangulo");
+        botonPresionado = true;
+    }
+    else if(gp.buttons[0].pressed){
+        enviar("DOWN","x");
+        botonPresionado = true;
+    }
+    else if(gp.buttons[2].pressed){
+        enviar("LEFTH","cuadrado");
+        botonPresionado = true;
+    }
+    else if(gp.buttons[1].pressed){
+        enviar("RIGHT","circulo");
+        botonPresionado = true;
+    }
+
 }, 100);
 </script>
+
 </body>
 </html>
