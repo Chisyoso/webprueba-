@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#030507">
-<title>timbitOS v4</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>timbitoOS v4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -21,7 +20,7 @@
     <div id="esp-status">
       <div class="esp-dot" id="esp-dot"></div>
       <span id="esp-label">SIN CONEXIÓN</span>
-      <button id="btn-connect">WiFi ESP32</button>
+      <button id="btn-connect" onclick="openConnectModal()">WiFi ESP32</button>
     </div>
   </div>
 
@@ -37,32 +36,30 @@
   <!-- VIEWS -->
   <div id="views">
 
-    <!-- TERMINAL -->
+    <!-- ═══ TERMINAL ═══ -->
     <div class="view active" id="terminal-view">
       <div id="output"></div>
       <div id="input-wrap">
         <div id="quick-cmds">
-          <button class="qcmd" data-fill="$variable.crear()">$variable.crear</button>
-          <button class="qcmd" data-fill="$variable.editar(,)">$variable.editar</button>
-          <button class="qcmd" data-fill="$variable.leer()">$variable.leer</button>
-          <button class="qcmd" data-fill="$pin.salida()">$pin.salida</button>
-          <button class="qcmd" data-fill="$pin.escribir(,)">$pin.escribir</button>
-          <button class="qcmd" data-fill="$pin.leer()">$pin.leer</button>
-          <button class="qcmd" data-fill="$loop.init()">$loop.init</button>
-          <button class="qcmd" data-fill="$loop.stop()">$loop.stop</button>
-          <button class="qcmd" data-fill="$delay(500)">$delay</button>
-          <button class="qcmd" data-fill="$print()">$print</button>
-          <button class="qcmd" data-fill="$help()">$help</button>
+          <div class="qcmd" onclick="fillCmd('$variable.crear()')">$variable.crear</div>
+          <div class="qcmd" onclick="fillCmd('$variable.editar()')">$variable.editar</div>
+          <div class="qcmd" onclick="fillCmd('$variable.leer()')">$variable.leer</div>
+          <div class="qcmd" onclick="fillCmd('$pin.salida()')">$pin.salida</div>
+          <div class="qcmd" onclick="fillCmd('$pin.escribir(,)')">$pin.escribir</div>
+          <div class="qcmd" onclick="fillCmd('$loop.init()')">$loop.init</div>
+          <div class="qcmd" onclick="fillCmd('$loop.stop()')">$loop.stop</div>
+          <div class="qcmd" onclick="fillCmd('$delay(500)')">$delay</div>
+          <div class="qcmd" onclick="fillCmd('$print()')">$print</div>
         </div>
         <div id="input-row">
           <span id="prompt">❯</span>
           <input id="cmd-input" placeholder="$comando(args)..." autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none">
-          <button id="btn-send">↑</button>
+          <button id="btn-send" onclick="sendCmd()">↑</button>
         </div>
       </div>
     </div>
 
-    <!-- VARIABLES -->
+    <!-- ═══ VARIABLES ═══ -->
     <div class="view" id="vars-view">
       <div class="view-header">VARIABLES <span id="var-count-lbl">0</span></div>
       <div class="list-wrap" id="var-list-ui">
@@ -73,7 +70,7 @@
       </div>
     </div>
 
-    <!-- PINES -->
+    <!-- ═══ PINES ═══ -->
     <div class="view" id="pins-view">
       <div class="view-header">PINES <span id="pin-count-lbl">0</span></div>
       <div class="pin-grid" id="pin-grid-ui">
@@ -84,27 +81,26 @@
       </div>
     </div>
 
-    <!-- LOOPS -->
+    <!-- ═══ LOOPS ═══ -->
     <div class="view" id="loops-view">
       <div class="view-header">LOOPS <span id="loop-count-lbl">0</span></div>
       <div class="loop-list-wrap" id="loop-list-ui">
         <div class="empty-state">
           <div class="empty-icon">🔁</div>
-          <div>Sin loops. Defínelos en el editor.</div>
+          <div>Sin loops. Abre un archivo y define un loop</div>
         </div>
       </div>
     </div>
 
-    <!-- ESP32 CONFIG -->
+    <!-- ═══ ESP32 CONFIG ═══ -->
     <div class="view" id="esp-view">
       <div class="esp-config-wrap">
-
         <div class="esp-status-card">
           <div class="esp-card-title">ESTADO DE CONEXIÓN</div>
           <div class="esp-stat-row"><span class="esp-stat-key">IP del ESP32</span><span class="esp-stat-val" id="stat-ip">—</span></div>
           <div class="esp-stat-row"><span class="esp-stat-key">Puerto</span><span class="esp-stat-val" id="stat-port">80</span></div>
           <div class="esp-stat-row"><span class="esp-stat-key">Estado</span><span class="esp-stat-val err" id="stat-status">Desconectado</span></div>
-          <div class="esp-stat-row"><span class="esp-stat-key">Modo</span><span class="esp-stat-val" id="stat-mode">Redirección (img)</span></div>
+          <div class="esp-stat-row"><span class="esp-stat-key">Latencia</span><span class="esp-stat-val" id="stat-ping">—</span></div>
           <div class="esp-stat-row"><span class="esp-stat-key">Comandos enviados</span><span class="esp-stat-val" id="stat-cmds">0</span></div>
         </div>
 
@@ -118,22 +114,20 @@
             <div class="esp-label">Puerto HTTP</div>
             <input class="esp-input" id="esp-port-input" placeholder="80" type="number" inputmode="numeric" value="80">
           </div>
-          <button class="esp-action-btn" id="btn-esp-connect">🔗 CONECTAR</button>
-          <button class="esp-action-btn danger" id="btn-esp-disconnect">✕ DESCONECTAR</button>
+          <button class="esp-action-btn" onclick="espConnect()">🔗 CONECTAR</button>
+          <button class="esp-action-btn danger" onclick="espDisconnect()" style="margin-top:8px">✕ DESCONECTAR</button>
         </div>
 
         <div class="esp-card">
-          <div class="esp-card-title">INFO DEL PROTOCOLO</div>
-          <div style="font-size:10px;color:var(--dim);line-height:1.8">
-            Modo: <span style="color:var(--acc)">Redirección por imagen</span> (sin CORS)<br>
-            Cada comando crea una petición GET al ESP32<br>
-            <span style="color:var(--acc4)">GET http://IP/cmd?c=PIN_WRITE:2:1</span><br><br>
-            El ESP32 responde aunque sea con un error HTTP,<br>
-            lo importante es que reciba la URL y ejecute el comando.
+          <div class="esp-card-title">CÓDIGO PARA EL ESP32</div>
+          <div style="font-size:10px;color:var(--dim);line-height:1.7">
+            Flashea este sketch en tu ESP32.<br>
+            El ESP32 debe estar en la misma red WiFi.<br><br>
+            <span style="color:var(--acc)">Endpoint:</span> <span style="color:var(--acc4)">GET /cmd?c=COMANDO</span><br>
+            <span style="color:var(--acc)">Respuesta:</span> JSON <span style="color:var(--acc4)">{"ok":true,"val":...}</span><br><br>
+            <button class="esp-action-btn" onclick="showSketch()" style="margin-top:4px">📋 VER SKETCH ARDUINO</button>
           </div>
-          <button class="esp-action-btn" id="btn-show-sketch" style="margin-top:10px">📋 VER SKETCH ARDUINO</button>
         </div>
-
       </div>
     </div>
 
@@ -145,9 +139,9 @@
   <div id="editor-topbar">
     <div id="editor-fname">📄 sin_archivo</div>
     <div id="editor-btns">
-      <button class="ed-btn run-ed" id="btn-editor-run">▶ RUN</button>
-      <button class="ed-btn save" id="btn-editor-save">💾</button>
-      <button class="ed-btn" id="btn-editor-close">✕</button>
+      <button class="ed-btn run-ed" onclick="editorRun()">▶ RUN</button>
+      <button class="ed-btn save" onclick="editorSave()">💾</button>
+      <button class="ed-btn" onclick="editorClose()">✕</button>
     </div>
   </div>
   <textarea id="editor-area" placeholder="Escribe tu script aquí...
@@ -156,20 +150,20 @@ Ejemplo:
 $variable.crear(x)
 $variable.editar(x, 0)
 $loop.blink(
-  $pin.escribir(2, 1)
-  $delay(500)
-  $pin.escribir(2, 0)
-  $delay(500)
+$pin.escribir(2, 1)
+$delay(500)
+$pin.escribir(2, 0)
+$delay(500)
 )
 $loop.init(blink)"></textarea>
-  <div id="editor-bar">Ctrl+S guardar · Tab = 2 espacios</div>
+  <div id="editor-bar">Ctrl+S guardar · Toca fuera para cerrar</div>
 </div>
 
 <!-- DEBUG OVERLAY -->
 <div id="debug-overlay">
   <div id="debug-topbar">
     <div id="debug-title">⬡ DEBUGGER</div>
-    <button id="debug-close-btn">✕</button>
+    <div id="debug-close" onclick="closeDebug()">✕</div>
   </div>
   <div id="debug-content"><span style="color:var(--dim)">Sin datos. Activa con $debug.on()</span></div>
 </div>
@@ -187,14 +181,12 @@ $loop.init(blink)"></textarea>
       <input class="conn-input" id="modal-port" placeholder="80" type="number" inputmode="numeric" value="80">
     </div>
     <div class="conn-btns">
-      <button class="conn-btn" id="modal-cancel">CANCELAR</button>
-      <button class="conn-btn primary" id="modal-connect">CONECTAR</button>
+      <button class="conn-btn" onclick="closeConnectModal()">CANCELAR</button>
+      <button class="conn-btn primary" onclick="connectFromModal()">CONECTAR</button>
     </div>
   </div>
 </div>
 
-<script src="runtime.js"></script>
-<script src="ui.js"></script>
-<script src="main.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
