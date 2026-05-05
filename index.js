@@ -1,153 +1,169 @@
+// index.js
+
 const terminal = document.getElementById("terminal");
 const input = document.getElementById("input");
 const suggestionsBox = document.getElementById("suggestions");
+const panel = document.getElementById("panel");
+const panelBtn = document.getElementById("panelBtn");
+const panelContent = document.getElementById("panelContent");
 
-// comandos válidos
+// estado
+let history = [];
+let stats = {};
+let variables = {};
+let loops = {};
+let pins = {};
+let ifLogs = [];
+
+// comandos
 const comandos = [
-    "$crear.pin.salida()",
-    "$crear.pin.entrada()",
-    "$leer.pin()",
-    "$escribir.pin()"
+"$clear",
+"$historial",
+"$crear.pin.salida()",
+"$crear.pin.entrada()",
+"$leer.pin()",
+"$escribir.pin()",
+"$variable.crear()",
+"$variable.edit()",
+"$delet.variable()",
+"$loop.",
+"$loop.sleep()",
+"$if(){}"
 ];
 
-// memoria virtual
-let history = JSON.parse(localStorage.getItem("timbito_logs")) || [];
-
-// imprimir en terminal
-function print(text, type = "system") {
-    const line = document.createElement("div");
-    line.classList.add("line", type);
-    line.textContent = text;
-    terminal.appendChild(line);
-
-    terminal.scrollTop = terminal.scrollHeight;
-
+// print
+function print(text, type="system"){
+    const div = document.createElement("div");
+    div.className="line "+type;
+    div.textContent=text;
+    terminal.appendChild(div);
+    terminal.scrollTop=terminal.scrollHeight;
     history.push(text);
-    localStorage.setItem("timbito_logs", JSON.stringify(history));
 }
 
-// cargar historial
-history.forEach(msg => print(msg));
-
-// detectar ENTER
-input.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-        const cmd = input.value.trim();
-        print("$ " + cmd, "user");
-
-        input.value = "";
-        suggestionsBox.textContent = "";
-
+// ejecutar
+input.addEventListener("keydown", async (e)=>{
+    if(e.key==="Enter"){
+        const cmd=input.value.trim();
+        print("$ "+cmd,"user");
+        count(cmd);
+        input.value="";
         await ejecutar(cmd);
     }
 });
 
-// sugerencias en vivo
-input.addEventListener("input", () => {
-    const val = input.value;
+// contador
+function count(cmd){
+    stats[cmd]=(stats[cmd]||0)+1;
+}
 
-    if (!val) {
-        suggestionsBox.textContent = "";
-        return;
+// comandos
+async function ejecutar(cmd){
+
+    if(cmd==="$clear"){
+        terminal.innerHTML="";
     }
 
-    const sugerencias = comandos.filter(c => c.includes(val));
-
-    if (sugerencias.length > 0) {
-        suggestionsBox.textContent = "Sugerencias: " + sugerencias.join(" | ");
-    } else {
-        const cercano = comandoMasCercano(val);
-        if (cercano) {
-            suggestionsBox.textContent = "Quizás quisiste decir: " + cercano;
-        }
+    else if(cmd==="$historial"){
+        Object.keys(stats).forEach(k=>{
+            print(k+" -> "+stats[k]);
+        });
     }
+
+    else if(cmd.startsWith("$variable.crear")){
+        let name=cmd.match(/"(.*?)"/)?.[1];
+        variables[name]=0;
+        print("variable creada: "+name);
+    }
+
+    else if(cmd.startsWith("$variable.edit")){
+        let data=[...cmd.matchAll(/"(.*?)"/g)].map(x=>x[1]);
+        variables[data[0]]=eval(data[1]);
+        print("editada "+data[0]);
+    }
+
+    else if(cmd.startsWith("$delet.variable")){
+        let name=cmd.match(/"(.*?)"/)?.[1];
+        delete variables[name];
+        print("eliminada "+name);
+    }
+
+    else if(cmd.startsWith("$if")){
+        try{
+            let cond=cmd.match(/\((.*?)\)/)[1];
+            let action=cmd.match(/\{(.*?)\}/)[1];
+            if(eval(parse(cond))){
+                ifLogs.push(action);
+                ejecutar(action);
+            }
+        }catch{print("error if","error")}
+    }
+
+    else if(cmd.startsWith("$loop.")){
+        let name=cmd.split(".")[1];
+        loops[name]={running:true,logs:[]};
+        print("loop creado: "+name);
+    }
+
+    else if(cmd==="$loop.sleep()"){
+        Object.values(loops).forEach(l=>l.running=false);
+        print("loops pausados");
+    }
+
+    else if(cmd.startsWith("$delet.loop")){
+        loops={};
+        print("loops eliminados");
+    }
+
+    else if(cmd==="$crear.pin.salida()"){
+        pins[Object.keys(pins).length]= "salida";
+        print("pin salida creado");
+    }
+
+    else if(cmd==="$crear.pin.entrada()"){
+        pins[Object.keys(pins).length]= "entrada";
+        print("pin entrada creado");
+    }
+
+    else if(cmd==="$leer.pin()"){
+        print("leyendo pin...");
+    }
+
+    else if(cmd==="$escribir.pin()"){
+        print("escribiendo pin...");
+    }
+
+    else{
+        print("comando no reconocido","error");
+    }
+}
+
+// parse operadores C++
+function parse(c){
+    return c.replace(/\|\|/g,"||")
+            .replace(/&&/g,"&&")
+            .replace(/==/g,"==");
+}
+
+// sugerencias
+input.addEventListener("input",()=>{
+    const val=input.value;
+    let sug=comandos.filter(c=>c.includes(val));
+    suggestionsBox.textContent=sug.join(" | ");
 });
 
-// algoritmo simple de similitud
-function comandoMasCercano(input) {
-    let mejor = "";
-    let minDist = Infinity;
+// panel toggle
+panelBtn.onclick=()=>{
+    panel.classList.toggle("hidden");
+    renderPanel();
+};
 
-    comandos.forEach(cmd => {
-        const dist = levenshtein(input, cmd);
-        if (dist < minDist) {
-            minDist = dist;
-            mejor = cmd;
-        }
-    });
+// render panel
+function renderPanel(){
+    panelContent.innerHTML="";
 
-    return minDist <= 10 ? mejor : null;
-}
-
-// distancia de Levenshtein
-function levenshtein(a, b) {
-    const matrix = [];
-
-    for (let i = 0; i <= b.length; i++) {
-        matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= a.length; j++) {
-        matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-        for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                );
-            }
-        }
-    }
-
-    return matrix[b.length][a.length];
-}
-
-// ejecución de comandos
-async function ejecutar(cmd) {
-
-    if (cmd === "$crear.pin.salida()") {
-        print("Configurando salida...");
-        await enviarESP("crear_salida");
-    }
-
-    else if (cmd === "$crear.pin.entrada()") {
-        print("Configurando entrada...");
-        await enviarESP("crear_entrada");
-    }
-
-    else if (cmd === "$leer.pin()") {
-        print("Leyendo...");
-        await enviarESP("leer");
-    }
-
-    else if (cmd === "$escribir.pin()") {
-        print("Encendiendo LED...");
-        await enviarESP("escribir");
-    }
-
-    else {
-        const sugerido = comandoMasCercano(cmd);
-        print("Comando no reconocido", "error");
-
-        if (sugerido) {
-            print("Sugerencia: " + sugerido, "system");
-        }
-    }
-}
-
-// conexión ESP32
-async function enviarESP(accion) {
-    try {
-        const res = await fetch(`http://192.168.4.1/${accion}`);
-        const text = await res.text();
-        print("ESP32: " + text);
-    } catch {
-        print("Error de conexión", "error");
-    }
+    panelContent.innerHTML+=`<h4>Pins</h4>${JSON.stringify(pins)}`;
+    panelContent.innerHTML+=`<h4>Loops</h4>${JSON.stringify(loops)}`;
+    panelContent.innerHTML+=`<h4>Variables</h4>${JSON.stringify(variables)}`;
+    panelContent.innerHTML+=`<h4>If Logs</h4>${JSON.stringify(ifLogs)}`;
 }
