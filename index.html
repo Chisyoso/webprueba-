@@ -2,105 +2,30 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>timbitoOS</title>
-<style>
-body {
-    background: black;
-    color: #00ff00;
-    font-family: monospace;
-    padding: 10px;
-}
-
-#terminal {
-    height: 90vh;
-    overflow-y: auto;
-}
-
-input {
-    width: 100%;
-    background: black;
-    color: #00ff00;
-    border: none;
-    outline: none;
-}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div id="terminal"></div>
-<input id="input" autofocus placeholder="$">
+<div class="app">
 
-<script>
-const terminal = document.getElementById("terminal");
-const input = document.getElementById("input");
+    <div class="header">
+        <span>timbitoOS</span>
+        <small>mobile terminal</small>
+    </div>
 
-// memoria virtual
-let history = [];
+    <div id="terminal"></div>
 
-function print(text) {
-    const line = document.createElement("div");
-    line.textContent = text;
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
+    <div class="input-container">
+        <span>$</span>
+        <input id="input" autocomplete="off" placeholder="Escribe un comando...">
+    </div>
 
-    history.push(text);
-    localStorage.setItem("timbito_logs", JSON.stringify(history));
-}
+    <div id="suggestions"></div>
 
-// cargar logs
-const saved = localStorage.getItem("timbito_logs");
-if (saved) {
-    history = JSON.parse(saved);
-    history.forEach(print);
-}
+</div>
 
-input.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-        const cmd = input.value.trim();
-        print("$ " + cmd);
-        input.value = "";
-
-        await ejecutar(cmd);
-    }
-});
-
-async function ejecutar(cmd) {
-
-    if (cmd === "$crear.pin.salida()") {
-        print("Configurando pin como salida...");
-        await enviarESP("crear_salida");
-    }
-
-    else if (cmd === "$crear.pin.entrada()") {
-        print("Configurando pin como entrada...");
-        await enviarESP("crear_entrada");
-    }
-
-    else if (cmd === "$leer.pin()") {
-        print("Leyendo pin...");
-        await enviarESP("leer");
-    }
-
-    else if (cmd === "$escribir.pin()") {
-        print("Escribiendo pin...");
-        await enviarESP("escribir");
-    }
-
-    else {
-        print("Comando no reconocido");
-    }
-}
-
-async function enviarESP(accion) {
-    try {
-        const res = await fetch(`http://192.168.4.1/${accion}`);
-        const text = await res.text();
-        print("ESP32: " + text);
-    } catch (err) {
-        print("Error de conexión con ESP32");
-    }
-}
-</script>
-
+<script src="index.js"></script>
 </body>
 </html>
