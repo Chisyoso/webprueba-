@@ -1,8 +1,9 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>timbitoOS</title>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -12,18 +13,23 @@
 
     <div class="header">
         <span>timbitoOS</span>
-        <small>mobile terminal</small>
+        <button id="panelBtn">☰</button>
     </div>
 
     <div id="terminal"></div>
 
     <div class="input-container">
         <span>$</span>
-        <input id="input" autocomplete="off" placeholder="Escribe un comando...">
+        <input id="input" autocomplete="off">
     </div>
 
     <div id="suggestions"></div>
+</div>
 
+<!-- PANEL -->
+<div id="panel" class="panel hidden">
+    <h3>Estado</h3>
+    <div id="panelContent"></div>
 </div>
 
 <script src="index.js"></script>
