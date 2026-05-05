@@ -3,630 +3,1493 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>timbitoOS v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
-
 :root {
-–bg: #0a0c0f;
-–panel: #0f1318;
-–border: #1e2530;
-–accent: #00ff9d;
-–accent2: #00c9ff;
-–accent3: #ff4e6a;
-–accent4: #ffb800;
-–text: #c8d6e5;
-–dim: #4a5568;
-–glow: 0 0 8px #00ff9d55;
-–glow2: 0 0 8px #00c9ff55;
+  --bg0:    #030507;
+  --bg1:    #070a0f;
+  --bg2:    #0c1018;
+  --bg3:    #111722;
+  --border: #18202e;
+  --border2:#1f2c3f;
+  --acc:    #00e5ff;
+  --acc2:   #00ff9f;
+  --acc3:   #ff3d6b;
+  --acc4:   #ffaa00;
+  --acc5:   #bf5af2;
+  --text:   #b0c4d8;
+  --dim:    #3a4a5e;
+  --dim2:   #253040;
+  --font:   'Fira Code', monospace;
+  --head:   'Orbitron', sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-- { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-body {
-background: var(–bg);
+html, body {
+height: 100%; width: 100%;
+background: var(–bg0);
 color: var(–text);
-font-family: ‘JetBrains Mono’, monospace;
-height: 100vh;
+font-family: var(–font);
 overflow: hidden;
+touch-action: manipulation;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none; z-index: 9998; opacity: .6;
+}
+
+/* ── SCANLINES ── */
+body::after {
+content: ‘’;
+position: fixed; inset: 0;
+background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.06) 3px, rgba(0,0,0,.06) 4px);
+pointer-events: none; z-index: 9997;
+}
+
+/* ══════════════════ LAYOUT ══════════════════ */
+#app {
 display: flex;
 flex-direction: column;
+height: 100%;
+height: 100dvh;
 }
 
-/* HEADER */
-#header {
+/* ── TOPBAR ── */
+#topbar {
+flex: 0 0 auto;
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 8px 16px;
-background: var(–panel);
+padding: 10px 14px 8px;
+background: var(–bg1);
 border-bottom: 1px solid var(–border);
+gap: 10px;
+}
+
+#logo {
+font-family: var(–head);
+font-size: 15px;
+font-weight: 900;
+letter-spacing: 3px;
+color: var(–acc);
+text-shadow: 0 0 16px rgba(0,229,255,.35), 0 0 40px rgba(0,229,255,.1);
+white-space: nowrap;
+}
+#logo sub { font-size: 9px; color: var(–dim); letter-spacing: 1px; }
+
+#esp-status {
+display: flex;
+align-items: center;
+gap: 8px;
+flex: 1;
+justify-content: flex-end;
+}
+.esp-dot {
+width: 8px; height: 8px;
+border-radius: 50%;
+background: var(–dim);
+transition: background .3s, box-shadow .3s;
+}
+.esp-dot.connected { background: var(–acc2); box-shadow: 0 0 8px var(–acc2), 0 0 20px rgba(0,255,159,.2); animation: pulse-dot 2s infinite; }
+.esp-dot.error     { background: var(–acc3); box-shadow: 0 0 8px var(–acc3); }
+.esp-dot.connecting { background: var(–acc4); box-shadow: 0 0 8px var(–acc4); animation: blink .6s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+#esp-label { font-size: 10px; color: var(–dim); letter-spacing: .5px; }
+#esp-label.ok { color: var(–acc2); }
+#esp-label.err { color: var(–acc3); }
+
+#btn-connect {
+background: var(–bg3);
+border: 1px solid var(–border2);
+color: var(–dim);
+font-family: var(–font);
+font-size: 10px;
+padding: 5px 10px;
+border-radius: 6px;
+cursor: pointer;
+transition: .2s;
+white-space: nowrap;
+}
+#btn-connect:active { opacity: .7; }
+#btn-connect.connected { border-color: var(–acc3); color: var(–acc3); }
+
+/* ── TABS ── */
+#tabs {
+flex: 0 0 auto;
+display: flex;
+background: var(–bg1);
+border-bottom: 1px solid var(–border);
+overflow-x: auto;
+scrollbar-width: none;
+}
+#tabs::-webkit-scrollbar { display: none; }
+.tab {
+flex: 0 0 auto;
+padding: 9px 16px;
+font-family: var(–font);
+font-size: 10px;
+letter-spacing: 1px;
+color: var(–dim);
+border-bottom: 2px solid transparent;
+cursor: pointer;
+transition: .15s;
+white-space: nowrap;
 user-select: none;
 }
-#logo {
-font-family: ‘Share Tech Mono’, monospace;
-font-size: 18px;
-color: var(–accent);
-text-shadow: var(–glow);
-letter-spacing: 2px;
-}
-#logo span { color: var(–accent2); }
-#status-bar {
-display: flex;
-gap: 16px;
-font-size: 11px;
-color: var(–dim);
-}
-.status-item { display: flex; align-items: center; gap: 4px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: var(–dim); }
-.dot.active { background: var(–accent); box-shadow: var(–glow); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.tab.active { color: var(–acc); border-bottom-color: var(–acc); }
+.tab:active { opacity: .7; }
 
-/* MAIN LAYOUT */
-#main {
-flex: 1;
-display: grid;
-grid-template-columns: 1fr 280px;
-grid-template-rows: 1fr 180px;
-gap: 1px;
-background: var(–border);
-overflow: hidden;
-}
+/* ── VIEWS ── */
+#views { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.view.active { display: flex; }
 
-/* TERMINAL */
-#terminal-wrap {
-background: var(–panel);
-display: flex;
-flex-direction: column;
-overflow: hidden;
-}
-#terminal-title {
-padding: 6px 12px;
-font-size: 10px;
-color: var(–dim);
-border-bottom: 1px solid var(–border);
-letter-spacing: 1px;
-text-transform: uppercase;
-}
+/* ════════ TERMINAL VIEW ════════ */
+#terminal-view { background: var(–bg0); }
+
 #output {
 flex: 1;
 overflow-y: auto;
-padding: 12px;
-font-size: 13px;
-line-height: 1.7;
+padding: 12px 14px 4px;
+font-size: 12.5px;
+line-height: 1.8;
+overscroll-behavior: contain;
 scrollbar-width: thin;
 scrollbar-color: var(–border) transparent;
 }
-#output::-webkit-scrollbar { width: 4px; }
-#output::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+#output::-webkit-scrollbar { width: 3px; }
+#output::-webkit-scrollbar-thumb { background: var(–border2); border-radius: 2px; }
 
-.line-ok     { color: var(–accent); }
-.line-err    { color: var(–accent3); }
-.line-warn   { color: var(–accent4); }
-.line-info   { color: var(–accent2); }
-.line-cmd    { color: #fff; opacity: .6; }
-.line-debug  { color: #a78bfa; font-size: 11px; }
-.line-print  { color: var(–text); }
-.line-sys    { color: var(–dim); font-style: italic; }
+.l-cmd   { color: rgba(255,255,255,.35); font-size: 11px; }
+.l-ok    { color: var(–acc2); }
+.l-err   { color: var(–acc3); }
+.l-warn  { color: var(–acc4); }
+.l-info  { color: var(–acc); }
+.l-print { color: #e0eeff; }
+.l-sys   { color: var(–dim); font-size: 11px; font-style: italic; }
+.l-debug { color: var(–acc5); font-size: 11px; }
+.l-esp   { color: var(–acc4); font-size: 11px; }
+.l-sep   { border-top: 1px solid var(–border); margin: 4px 0; }
+
+/* Highlight $ commands */
+.l-cmd .hl { color: rgba(0,229,255,.5); }
+
+/* Input area */
+#input-wrap {
+flex: 0 0 auto;
+background: var(–bg1);
+border-top: 1px solid var(–border);
+}
+
+/* Quick command shortcuts */
+#quick-cmds {
+display: flex;
+gap: 6px;
+padding: 8px 10px 4px;
+overflow-x: auto;
+scrollbar-width: none;
+}
+#quick-cmds::-webkit-scrollbar { display: none; }
+.qcmd {
+flex: 0 0 auto;
+background: var(–bg2);
+border: 1px solid var(–border2);
+color: var(–acc);
+font-family: var(–font);
+font-size: 10px;
+padding: 5px 10px;
+border-radius: 20px;
+cursor: pointer;
+transition: .15s;
+white-space: nowrap;
+}
+.qcmd:active { background: var(–bg3); border-color: var(–acc); }
 
 #input-row {
 display: flex;
 align-items: center;
-padding: 8px 12px;
-border-top: 1px solid var(–border);
+padding: 8px 10px;
+padding-bottom: calc(8px + var(–safe-bottom));
 gap: 8px;
 }
-#prompt { color: var(–accent); font-size: 14px; }
+#prompt {
+color: var(–acc);
+font-size: 15px;
+user-select: none;
+flex-shrink: 0;
+}
 #cmd-input {
 flex: 1;
-background: transparent;
-border: none;
-outline: none;
-color: #fff;
-font-family: ‘JetBrains Mono’, monospace;
-font-size: 13px;
-caret-color: var(–accent);
-}
-
-/* SIDEBAR – variables + pins + files */
-#sidebar {
-background: var(–panel);
-display: flex;
-flex-direction: column;
-overflow: hidden;
-}
-.sb-section {
-border-bottom: 1px solid var(–border);
-overflow: hidden;
-}
-.sb-title {
-padding: 6px 10px;
-font-size: 10px;
-color: var(–dim);
-letter-spacing: 1px;
-text-transform: uppercase;
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-.sb-count {
-background: var(–border);
+background: var(–bg2);
+border: 1px solid var(–border2);
 border-radius: 8px;
-padding: 1px 6px;
-font-size: 9px;
+outline: none;
+color: #e8f4ff;
+font-family: var(–font);
+font-size: 13px;
+padding: 8px 12px;
+caret-color: var(–acc);
+transition: border-color .2s;
+-webkit-appearance: none;
 }
-.sb-list {
-padding: 4px 10px 8px;
-font-size: 11px;
-max-height: 120px;
-overflow-y: auto;
-scrollbar-width: thin;
-scrollbar-color: var(–border) transparent;
-}
-.sb-item {
-display: flex;
-justify-content: space-between;
-padding: 2px 0;
-border-bottom: 1px solid #1a1f2a;
-}
-.sb-key { color: var(–accent2); }
-.sb-val { color: var(–accent4); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#cmd-input:focus { border-color: var(–acc); box-shadow: 0 0 0 2px rgba(0,229,255,.08); }
+#cmd-input::placeholder { color: var(–dim); }
 
-/* LOOPS PANEL */
-#loops-panel {
-background: var(–panel);
-display: flex;
-flex-direction: column;
-overflow: hidden;
-grid-column: 1;
+#btn-send {
+background: var(–acc);
+color: var(–bg0);
+border: none;
+border-radius: 8px;
+width: 38px; height: 38px;
+font-size: 16px;
+cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+flex-shrink: 0;
+transition: .15s;
+font-weight: 700;
 }
-.loop-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; flex: 1; align-content: flex-start; overflow-y: auto; }
-.loop-chip {
+#btn-send:active { opacity: .7; transform: scale(.95); }
+
+/* ════════ VARIABLES VIEW ════════ */
+#vars-view { background: var(–bg0); }
+
+.view-header {
+padding: 12px 14px 8px;
+font-family: var(–head);
+font-size: 11px;
+letter-spacing: 2px;
+color: var(–dim);
+border-bottom: 1px solid var(–border);
 display: flex;
 align-items: center;
-gap: 6px;
-background: #141a22;
-border: 1px solid var(–border);
-border-radius: 4px;
-padding: 4px 10px;
-font-size: 11px;
-cursor: default;
+justify-content: space-between;
 }
-.loop-chip.running { border-color: var(–accent); color: var(–accent); box-shadow: var(–glow); }
-.loop-chip.running .ldot { background: var(–accent); animation: pulse 1s infinite; }
-.loop-chip.stopped { color: var(–dim); }
-.loop-chip .ldot { width: 5px; height: 5px; border-radius: 50%; background: var(–dim); }
-.loop-btn {
-background: none;
+.view-header span { color: var(–acc); }
+
+.list-wrap { flex: 1; overflow-y: auto; padding: 8px 0; scrollbar-width: thin; scrollbar-color: var(–border) transparent; }
+
+.var-card {
+margin: 6px 12px;
+background: var(–bg2);
 border: 1px solid var(–border);
-color: var(–dim);
-border-radius: 3px;
-padding: 1px 5px;
+border-radius: 10px;
+padding: 12px 14px;
+display: flex;
+align-items: center;
+gap: 12px;
+transition: border-color .2s;
+animation: slideIn .2s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+.var-card:active { border-color: var(–acc); }
+.var-type-badge {
+background: var(–bg3);
+border: 1px solid var(–border2);
+border-radius: 5px;
+padding: 2px 7px;
 font-size: 9px;
+color: var(–acc);
+letter-spacing: 1px;
+flex-shrink: 0;
+}
+.var-info { flex: 1; min-width: 0; }
+.var-name { font-size: 13px; color: #e0eeff; font-weight: 500; }
+.var-val  { font-size: 12px; color: var(–acc4); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.var-del  { color: var(–dim); font-size: 16px; padding: 4px; cursor: pointer; flex-shrink: 0; }
+.var-del:active { color: var(–acc3); }
+
+.empty-state {
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+flex: 1; gap: 8px;
+color: var(–dim); font-size: 12px;
+}
+.empty-icon { font-size: 32px; opacity: .3; }
+
+/* ════════ PINES VIEW ════════ */
+#pins-view { background: var(–bg0); }
+
+.pin-grid {
+flex: 1; overflow-y: auto;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+padding: 10px 12px;
+align-content: start;
+}
+.pin-card {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 14px 12px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 8px;
 cursor: pointer;
-font-family: ‘JetBrains Mono’, monospace;
+transition: .2s;
+animation: slideIn .2s;
+}
+.pin-card.on { border-color: var(–acc2); background: rgba(0,255,159,.04); }
+.pin-card.on .pin-led { background: var(–acc2); box-shadow: 0 0 16px var(–acc2), 0 0 40px rgba(0,255,159,.2); }
+.pin-led {
+width: 28px; height: 28px;
+border-radius: 50%;
+background: var(–dim2);
+border: 2px solid var(–border2);
+transition: .25s;
+}
+.pin-num { font-size: 13px; font-weight: 600; color: var(–text); }
+.pin-mode-badge {
+font-size: 9px;
+padding: 2px 8px;
+border-radius: 10px;
+border: 1px solid var(–border2);
+color: var(–dim);
+}
+.pin-card.on .pin-mode-badge { border-color: var(–acc2); color: var(–acc2); }
+.pin-val { font-size: 18px; font-weight: 700; font-family: var(–head); color: var(–dim); }
+.pin-card.on .pin-val { color: var(–acc2); }
+
+/* ════════ LOOPS VIEW ════════ */
+#loops-view { background: var(–bg0); }
+
+.loop-list-wrap { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+.loop-card {
+margin: 6px 12px;
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 10px;
+overflow: hidden;
+animation: slideIn .2s;
+transition: border-color .2s;
+}
+.loop-card.running { border-color: var(–acc); }
+.loop-header {
+display: flex;
+align-items: center;
+padding: 12px 14px;
+gap: 12px;
+}
+.loop-indicator {
+width: 8px; height: 8px;
+border-radius: 50%;
+background: var(–dim);
+flex-shrink: 0;
+}
+.loop-card.running .loop-indicator {
+background: var(–acc);
+box-shadow: 0 0 8px var(–acc);
+animation: pulse-dot 1s infinite;
+}
+.loop-name { flex: 1; font-size: 13px; color: var(–text); font-weight: 500; }
+.loop-lines { font-size: 10px; color: var(–dim); }
+.loop-actions { display: flex; gap: 6px; }
+.loop-btn-action {
+background: var(–bg3);
+border: 1px solid var(–border2);
+color: var(–dim);
+font-family: var(–font);
+font-size: 10px;
+padding: 5px 10px;
+border-radius: 6px;
+cursor: pointer;
 transition: .15s;
 }
-.loop-btn:hover { border-color: var(–accent3); color: var(–accent3); }
-.loop-btn.start:hover { border-color: var(–accent); color: var(–accent); }
-
-/* DEBUG PANEL */
-#debug-panel {
-background: var(–panel);
-display: flex;
-flex-direction: column;
-overflow: hidden;
-grid-column: 2;
-grid-row: 2;
-}
-#debug-content {
-flex: 1;
-padding: 6px 10px;
+.loop-btn-action.run  { border-color: var(–acc2); color: var(–acc2); }
+.loop-btn-action.stop { border-color: var(–acc3); color: var(–acc3); }
+.loop-btn-action:active { opacity: .7; }
+.loop-body-preview {
+padding: 0 14px 10px;
 font-size: 10px;
-overflow-y: auto;
+color: var(–dim);
 line-height: 1.7;
-scrollbar-width: thin;
-scrollbar-color: var(–border) transparent;
+border-top: 1px solid var(–border);
+padding-top: 8px;
 }
-.dbg-line { color: #a78bfa; }
-.dbg-var  { color: var(–accent4); }
-.dbg-cond { color: var(–accent2); }
-.dbg-log  { color: var(–dim); }
 
-/* EDITOR OVERLAY */
+/* ════════ ESP32 VIEW ════════ */
+#esp-view { background: var(–bg0); }
+
+.esp-config-wrap { flex: 1; overflow-y: auto; padding: 12px; }
+
+.esp-card {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 14px;
+margin-bottom: 10px;
+}
+.esp-card-title {
+font-family: var(–head);
+font-size: 10px;
+color: var(–dim);
+letter-spacing: 2px;
+margin-bottom: 12px;
+}
+
+.esp-field { margin-bottom: 10px; }
+.esp-label { font-size: 10px; color: var(–dim); margin-bottom: 5px; letter-spacing: .5px; }
+.esp-input {
+width: 100%;
+background: var(–bg3);
+border: 1px solid var(–border2);
+border-radius: 8px;
+color: #e0eeff;
+font-family: var(–font);
+font-size: 13px;
+padding: 10px 12px;
+outline: none;
+-webkit-appearance: none;
+transition: border-color .2s;
+}
+.esp-input:focus { border-color: var(–acc); }
+
+.esp-action-btn {
+width: 100%;
+background: transparent;
+border: 1px solid var(–acc2);
+color: var(–acc2);
+font-family: var(–font);
+font-size: 12px;
+padding: 12px;
+border-radius: 8px;
+cursor: pointer;
+transition: .2s;
+letter-spacing: 1px;
+margin-top: 4px;
+}
+.esp-action-btn:active { background: rgba(0,255,159,.08); }
+.esp-action-btn.danger { border-color: var(–acc3); color: var(–acc3); }
+.esp-action-btn.danger:active { background: rgba(255,61,107,.08); }
+
+.esp-status-card {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 14px;
+margin-bottom: 10px;
+}
+.esp-stat-row {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 5px 0;
+font-size: 11px;
+border-bottom: 1px solid var(–border);
+}
+.esp-stat-row:last-child { border-bottom: none; }
+.esp-stat-key { color: var(–dim); }
+.esp-stat-val { color: var(–text); font-weight: 500; }
+.esp-stat-val.ok  { color: var(–acc2); }
+.esp-stat-val.err { color: var(–acc3); }
+
+/* ════════ EDITOR OVERLAY ════════ */
 #editor-overlay {
 display: none;
-position: fixed;
-inset: 0;
-background: #000000cc;
-z-index: 100;
-align-items: center;
-justify-content: center;
+position: fixed; inset: 0;
+background: rgba(0,0,0,.85);
+z-index: 500;
+flex-direction: column;
+backdrop-filter: blur(4px);
 }
 #editor-overlay.open { display: flex; }
-#editor-box {
-background: #0d1117;
-border: 1px solid var(–accent2);
-border-radius: 8px;
-width: 640px;
-max-width: 95vw;
-max-height: 80vh;
-display: flex;
-flex-direction: column;
-box-shadow: 0 0 40px #00c9ff22;
-}
-#editor-header {
+
+#editor-topbar {
+background: var(–bg1);
+border-bottom: 1px solid var(–border2);
+padding: 12px 14px;
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 10px 16px;
-border-bottom: 1px solid var(–border);
+flex-shrink: 0;
 }
-#editor-filename {
+#editor-fname {
+font-family: var(–head);
 font-size: 12px;
-color: var(–accent2);
+color: var(–acc);
 letter-spacing: 1px;
 }
-#editor-actions { display: flex; gap: 8px; }
+#editor-btns { display: flex; gap: 8px; }
 .ed-btn {
-background: var(–border);
-border: 1px solid #2d3748;
+background: var(–bg3);
+border: 1px solid var(–border2);
 color: var(–text);
-padding: 4px 12px;
-border-radius: 4px;
-cursor: pointer;
-font-family: ‘JetBrains Mono’, monospace;
+font-family: var(–font);
 font-size: 11px;
+padding: 7px 14px;
+border-radius: 7px;
+cursor: pointer;
 transition: .15s;
 }
-.ed-btn:hover { background: #1e2a3a; border-color: var(–accent2); color: var(–accent2); }
-.ed-btn.save { border-color: var(–accent); color: var(–accent); }
-.ed-btn.save:hover { background: #001a0f; }
+.ed-btn.save { border-color: var(–acc2); color: var(–acc2); }
+.ed-btn.run-ed { border-color: var(–acc4); color: var(–acc4); }
+.ed-btn:active { opacity: .7; }
+
 #editor-area {
 flex: 1;
-background: transparent;
+background: var(–bg0);
 border: none;
 outline: none;
 resize: none;
-color: var(–text);
-font-family: ‘JetBrains Mono’, monospace;
+color: #e0eeff;
+font-family: var(–font);
 font-size: 13px;
-line-height: 1.7;
-padding: 16px;
-min-height: 300px;
-tab-size: 4;
+line-height: 1.8;
+padding: 14px;
+caret-color: var(–acc);
+tab-size: 2;
+-webkit-appearance: none;
 }
-#editor-status {
-padding: 6px 16px;
+#editor-bar {
+background: var(–bg1);
+border-top: 1px solid var(–border);
+padding: 6px 14px;
 font-size: 10px;
 color: var(–dim);
-border-top: 1px solid var(–border);
+flex-shrink: 0;
+padding-bottom: calc(6px + var(–safe-bottom));
 }
 
-/* PIN VISUAL */
-.pin-display {
-display: flex;
-flex-wrap: wrap;
-gap: 6px;
-padding: 6px 10px 8px;
-}
-.pin-item {
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 2px;
-font-size: 9px;
-}
-.pin-led {
-width: 14px;
-height: 14px;
-border-radius: 50%;
-border: 1px solid var(–border);
-background: #1a1f2a;
-transition: .2s;
-}
-.pin-led.on { background: var(–accent); box-shadow: var(–glow); }
-.pin-led.on-hi { background: var(–accent2); box-shadow: var(–glow2); }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
-
-/* Scanlines overlay */
-body::after {
-content: ‘’;
+/* ════════ DEBUG OVERLAY ════════ */
+#debug-overlay {
 position: fixed;
-inset: 0;
-background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
-pointer-events: none;
-z-index: 999;
+bottom: 0; left: 0; right: 0;
+background: rgba(7,10,15,.97);
+border-top: 2px solid var(–acc5);
+z-index: 400;
+max-height: 45vh;
+display: none;
+flex-direction: column;
+transform: translateY(100%);
+transition: transform .3s ease;
 }
+#debug-overlay.open { display: flex; transform: translateY(0); }
+#debug-topbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 14px;
+border-bottom: 1px solid var(–border);
+flex-shrink: 0;
+}
+#debug-title { font-family: var(–head); font-size: 11px; color: var(–acc5); letter-spacing: 2px; }
+#debug-close { color: var(–dim); font-size: 18px; cursor: pointer; padding: 2px 6px; }
+#debug-content {
+flex: 1;
+overflow-y: auto;
+padding: 10px 14px;
+font-size: 11px;
+line-height: 1.7;
+scrollbar-width: thin;
+scrollbar-color: var(–border) transparent;
+}
+.dbg-row { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+.dbg-k { color: var(–acc5); }
+.dbg-v { color: var(–text); }
+.dbg-cond-t { color: var(–acc2); }
+.dbg-cond-f { color: var(–acc3); }
+
+/* ════════ CONNECT MODAL ════════ */
+#connect-modal {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,.8);
+z-index: 600;
+align-items: center;
+justify-content: center;
+backdrop-filter: blur(6px);
+}
+#connect-modal.open { display: flex; }
+#connect-box {
+background: var(–bg1);
+border: 1px solid var(–border2);
+border-radius: 16px;
+padding: 20px;
+width: min(90vw, 360px);
+box-shadow: 0 0 40px rgba(0,229,255,.05);
+}
+#connect-title {
+font-family: var(–head);
+font-size: 13px;
+color: var(–acc);
+letter-spacing: 2px;
+margin-bottom: 16px;
+text-align: center;
+}
+.conn-field { margin-bottom: 12px; }
+.conn-label { font-size: 10px; color: var(–dim); margin-bottom: 5px; letter-spacing: .5px; }
+.conn-input {
+width: 100%;
+background: var(–bg3);
+border: 1px solid var(–border2);
+border-radius: 8px;
+color: #e0eeff;
+font-family: var(–font);
+font-size: 13px;
+padding: 10px 12px;
+outline: none;
+-webkit-appearance: none;
+}
+.conn-input:focus { border-color: var(–acc); }
+.conn-btns { display: flex; gap: 8px; margin-top: 4px; }
+.conn-btn {
+flex: 1;
+background: transparent;
+border: 1px solid var(–border2);
+color: var(–text);
+font-family: var(–font);
+font-size: 11px;
+padding: 10px;
+border-radius: 8px;
+cursor: pointer;
+transition: .15s;
+}
+.conn-btn.primary { border-color: var(–acc); color: var(–acc); }
+.conn-btn:active { opacity: .7; }
+
+/* Utility */
+.sep-line { height: 1px; background: var(–border); margin: 4px 0; }
+
+/* FAB debug */
+#fab-debug {
+position: fixed;
+bottom: calc(16px + var(–safe-bottom));
+right: 16px;
+background: var(–bg2);
+border: 1px solid var(–acc5);
+color: var(–acc5);
+width: 40px; height: 40px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px;
+cursor: pointer;
+z-index: 300;
+box-shadow: 0 0 12px rgba(191,90,242,.2);
+transition: .15s;
+display: none;
+}
+#fab-debug:active { transform: scale(.92); }
 </style>
 
 </head>
 <body>
 
-<div id="header">
-  <div id="logo">timbito<span>OS</span> <span style="font-size:11px;color:var(--dim)">v4.0</span></div>
-  <div id="status-bar">
-    <div class="status-item"><div class="dot" id="runtime-dot"></div><span id="runtime-label">IDLE</span></div>
-    <div class="status-item"><div class="dot active" style="background:var(--accent2)"></div><span>RUNTIME OK</span></div>
-    <div class="status-item" id="debug-indicator" style="display:none"><div class="dot active" style="background:#a78bfa"></div><span>DEBUG</span></div>
+<div id="app">
+
+  <!-- TOPBAR -->
+
+  <div id="topbar">
+    <div id="logo">TIMBITO<sub>OS v4</sub></div>
+    <div id="esp-status">
+      <div class="esp-dot" id="esp-dot"></div>
+      <span id="esp-label">SIN CONEXIÓN</span>
+      <button id="btn-connect" onclick="openConnectModal()">WiFi ESP32</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+
+  <div id="tabs">
+    <div class="tab active" data-view="terminal-view">⌨ TERMINAL</div>
+    <div class="tab" data-view="vars-view">📦 VARIABLES</div>
+    <div class="tab" data-view="pins-view">🔌 PINES</div>
+    <div class="tab" data-view="loops-view">🔁 LOOPS</div>
+    <div class="tab" data-view="esp-view">⚙ ESP32</div>
+  </div>
+
+  <!-- VIEWS -->
+
+  <div id="views">
+
+```
+<!-- ═══ TERMINAL ═══ -->
+<div class="view active" id="terminal-view">
+  <div id="output"></div>
+  <div id="input-wrap">
+    <div id="quick-cmds">
+      <div class="qcmd" onclick="fillCmd('$variable.crear()')">$variable.crear</div>
+      <div class="qcmd" onclick="fillCmd('$variable.editar()')">$variable.editar</div>
+      <div class="qcmd" onclick="fillCmd('$variable.leer()')">$variable.leer</div>
+      <div class="qcmd" onclick="fillCmd('$pin.salida()')">$pin.salida</div>
+      <div class="qcmd" onclick="fillCmd('$pin.escribir(,)')">$pin.escribir</div>
+      <div class="qcmd" onclick="fillCmd('$loop.init()')">$loop.init</div>
+      <div class="qcmd" onclick="fillCmd('$loop.stop()')">$loop.stop</div>
+      <div class="qcmd" onclick="fillCmd('$delay(500)')">$delay</div>
+      <div class="qcmd" onclick="fillCmd('$print()')">$print</div>
+    </div>
+    <div id="input-row">
+      <span id="prompt">❯</span>
+      <input id="cmd-input" placeholder="$comando(args)..." autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none">
+      <button id="btn-send" onclick="sendCmd()">↑</button>
+    </div>
   </div>
 </div>
 
-<div id="main">
-
-  <!-- TERMINAL -->
-
-  <div id="terminal-wrap">
-    <div id="terminal-title">▸ terminal — timbitoOS shell v4</div>
-    <div id="output"></div>
-    <div id="input-row">
-      <span id="prompt">❯</span>
-      <input id="cmd-input" placeholder="escribe un comando..." autocomplete="off" spellcheck="false">
+<!-- ═══ VARIABLES ═══ -->
+<div class="view" id="vars-view">
+  <div class="view-header">VARIABLES <span id="var-count-lbl">0</span></div>
+  <div class="list-wrap" id="var-list-ui">
+    <div class="empty-state">
+      <div class="empty-icon">📦</div>
+      <div>Sin variables. Usa $variable.crear(nombre)</div>
     </div>
   </div>
+</div>
 
-  <!-- SIDEBAR -->
-
-  <div id="sidebar">
-    <div class="sb-section" style="flex:0 0 auto">
-      <div class="sb-title">Variables <span class="sb-count" id="var-count">0</span></div>
-      <div class="sb-list" id="var-list"></div>
-    </div>
-    <div class="sb-section" style="flex:0 0 auto">
-      <div class="sb-title">Pines <span class="sb-count" id="pin-count">0</span></div>
-      <div class="pin-display" id="pin-list"></div>
-    </div>
-    <div class="sb-section" style="flex:1; overflow:hidden; display:flex; flex-direction:column">
-      <div class="sb-title">Archivos <span class="sb-count" id="file-count">0</span></div>
-      <div class="sb-list" id="file-list" style="max-height:unset;flex:1"></div>
+<!-- ═══ PINES ═══ -->
+<div class="view" id="pins-view">
+  <div class="view-header">PINES <span id="pin-count-lbl">0</span></div>
+  <div class="pin-grid" id="pin-grid-ui">
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">🔌</div>
+      <div>Sin pines. Usa $pin.salida(2)</div>
     </div>
   </div>
+</div>
 
-  <!-- LOOPS PANEL -->
-
-  <div id="loops-panel">
-    <div id="terminal-title" style="border-bottom:1px solid var(--border); border-top:1px solid var(--border)">▸ loops activos</div>
-    <div class="loop-list" id="loop-list"></div>
+<!-- ═══ LOOPS ═══ -->
+<div class="view" id="loops-view">
+  <div class="view-header">LOOPS <span id="loop-count-lbl">0</span></div>
+  <div class="loop-list-wrap" id="loop-list-ui">
+    <div class="empty-state">
+      <div class="empty-icon">🔁</div>
+      <div>Sin loops. Abre un archivo y define un loop</div>
+    </div>
   </div>
+</div>
 
-  <!-- DEBUG PANEL -->
+<!-- ═══ ESP32 CONFIG ═══ -->
+<div class="view" id="esp-view">
+  <div class="esp-config-wrap">
+    <div class="esp-status-card">
+      <div class="esp-card-title">ESTADO DE CONEXIÓN</div>
+      <div class="esp-stat-row"><span class="esp-stat-key">IP del ESP32</span><span class="esp-stat-val" id="stat-ip">—</span></div>
+      <div class="esp-stat-row"><span class="esp-stat-key">Puerto</span><span class="esp-stat-val" id="stat-port">80</span></div>
+      <div class="esp-stat-row"><span class="esp-stat-key">Estado</span><span class="esp-stat-val err" id="stat-status">Desconectado</span></div>
+      <div class="esp-stat-row"><span class="esp-stat-key">Latencia</span><span class="esp-stat-val" id="stat-ping">—</span></div>
+      <div class="esp-stat-row"><span class="esp-stat-key">Comandos enviados</span><span class="esp-stat-val" id="stat-cmds">0</span></div>
+    </div>
 
-  <div id="debug-panel">
-    <div id="terminal-title" style="border-bottom:1px solid var(--border); border-top:1px solid var(--border)">▸ debugger</div>
-    <div id="debug-content"><span class="dbg-log">Sin datos de debug aún.</span></div>
+    <div class="esp-card">
+      <div class="esp-card-title">CONFIGURACIÓN</div>
+      <div class="esp-field">
+        <div class="esp-label">IP del ESP32</div>
+        <input class="esp-input" id="esp-ip-input" placeholder="192.168.1.100" type="text" inputmode="url">
+      </div>
+      <div class="esp-field">
+        <div class="esp-label">Puerto HTTP</div>
+        <input class="esp-input" id="esp-port-input" placeholder="80" type="number" inputmode="numeric" value="80">
+      </div>
+      <button class="esp-action-btn" onclick="espConnect()">🔗 CONECTAR</button>
+      <button class="esp-action-btn danger" onclick="espDisconnect()" style="margin-top:8px">✕ DESCONECTAR</button>
+    </div>
+
+    <div class="esp-card">
+      <div class="esp-card-title">CÓDIGO PARA EL ESP32</div>
+      <div style="font-size:10px;color:var(--dim);line-height:1.7">
+        Flashea este sketch en tu ESP32.<br>
+        El ESP32 debe estar en la misma red WiFi.<br><br>
+        <span style="color:var(--acc)">Endpoint:</span> <span style="color:var(--acc4)">GET /cmd?c=COMANDO</span><br>
+        <span style="color:var(--acc)">Respuesta:</span> JSON <span style="color:var(--acc4)">{"ok":true,"val":...}</span><br><br>
+        <button class="esp-action-btn" onclick="showSketch()" style="margin-top:4px">📋 VER SKETCH ARDUINO</button>
+      </div>
+    </div>
   </div>
+</div>
+```
 
+  </div>
 </div>
 
 <!-- EDITOR OVERLAY -->
 
 <div id="editor-overlay">
-  <div id="editor-box">
-    <div id="editor-header">
-      <div id="editor-filename">📄 sin_archivo</div>
-      <div id="editor-actions">
-        <button class="ed-btn save" onclick="editorSave()">💾 guardar</button>
-        <button class="ed-btn" onclick="editorClose()">✕ cerrar</button>
-      </div>
+  <div id="editor-topbar">
+    <div id="editor-fname">📄 sin_archivo</div>
+    <div id="editor-btns">
+      <button class="ed-btn run-ed" onclick="editorRun()">▶ RUN</button>
+      <button class="ed-btn save" onclick="editorSave()">💾</button>
+      <button class="ed-btn" onclick="editorClose()">✕</button>
     </div>
-    <textarea id="editor-area" placeholder="Escribe código timbitoOS aquí...
+  </div>
+  <textarea id="editor-area" placeholder="Escribe tu script aquí...
+
 Ejemplo:
-variable.crear x
-variable.edit x 0
-loop.blink
-  escribir.pin 2 1
-  delay 500
-  escribir.pin 2 0
-  delay 500
-loop.final"></textarea>
-    <div id="editor-status">Ctrl+S para guardar · Tab = 4 espacios</div>
+$variable.crear(x)
+$variable.editar(x, 0)
+$loop.blink(
+$pin.escribir(2, 1)
+$delay(500)
+$pin.escribir(2, 0)
+$delay(500)
+)
+$loop.init(blink)”></textarea>
+
+  <div id="editor-bar">Ctrl+S guardar · Toca fuera para cerrar</div>
+</div>
+
+<!-- DEBUG OVERLAY -->
+
+<div id="debug-overlay">
+  <div id="debug-topbar">
+    <div id="debug-title">⬡ DEBUGGER</div>
+    <div id="debug-close" onclick="closeDebug()">✕</div>
+  </div>
+  <div id="debug-content"><span style="color:var(--dim)">Sin datos. Activa con $debug.on()</span></div>
+</div>
+
+<!-- CONNECT MODAL -->
+
+<div id="connect-modal">
+  <div id="connect-box">
+    <div id="connect-title">⚡ CONECTAR ESP32</div>
+    <div class="conn-field">
+      <div class="conn-label">IP DEL ESP32</div>
+      <input class="conn-input" id="modal-ip" placeholder="192.168.1.100" type="text" inputmode="url">
+    </div>
+    <div class="conn-field">
+      <div class="conn-label">PUERTO</div>
+      <input class="conn-input" id="modal-port" placeholder="80" type="number" inputmode="numeric" value="80">
+    </div>
+    <div class="conn-btns">
+      <button class="conn-btn" onclick="closeConnectModal()">CANCELAR</button>
+      <button class="conn-btn primary" onclick="connectFromModal()">CONECTAR</button>
+    </div>
   </div>
 </div>
 
 <script>
-/* ============================================================
-   timbitoOS v4 — Motor completo
-   Parser → AST → Runtime async → Estado global
-   ============================================================ */
+/* ═══════════════════════════════════════════════════════════
+   timbitoOS v4  —  Engine completo
+   Sintaxis:  $comando(arg1, arg2, ...)
+   ESP32:     HTTP GET → ip:port/cmd?c=COMANDO_NATIVO
+   ═══════════════════════════════════════════════════════════ */
 
-// ─── ESTADO GLOBAL ──────────────────────────────────────────
-const STATE = {
-  vars: {},        // { name: { type, value } }
-  pins: {},        // { num: { mode, value } }
-  loops: {},       // { name: { body:[], running:bool, task:Promise } }
-  funcs: {},       // { name: lines[] }
-  files: {},       // { name: { content:string } }
-  debugMode: false,
-  debugLogs: [],
+// ─── ESTADO ──────────────────────────────────────────────────
+const S = {
+  vars:  {},     // { name: { type, value } }
+  pins:  {},     // { num: { mode, value } }
+  loops: {},     // { name: { body:[], running:bool } }
+  funcs: {},     // { name: AST[] }
+  files: {},     // { name: { content:string } }
+  esp: { ip:'', port:80, connected:false, ping:null, cmdsSent:0 },
+  debug: false,
   history: [],
   histIdx: -1,
 };
 
-// ─── TERMINAL OUTPUT ────────────────────────────────────────
-const out = document.getElementById('output');
-function log(msg, cls='line-ok') {
+// ─── OUTPUT ──────────────────────────────────────────────────
+const outEl = document.getElementById('output');
+function log(msg, cls='l-ok') {
   const d = document.createElement('div');
   d.className = cls;
-  d.textContent = msg;
-  out.appendChild(d);
-  out.scrollTop = out.scrollHeight;
+  if(cls === 'l-cmd') {
+    d.innerHTML = '<span style="color:var(--dim)">❯ </span><span class="hl">' + escHtml(msg) + '</span>';
+  } else {
+    d.textContent = msg;
+  }
+  outEl.appendChild(d);
+  outEl.scrollTop = outEl.scrollHeight;
 }
-function logCmd(cmd) { log('❯ ' + cmd, 'line-cmd'); }
-function logErr(msg)  { log('✗ ' + msg, 'line-err'); }
-function logWarn(msg) { log('⚠ ' + msg, 'line-warn'); }
-function logInfo(msg) { log('ℹ ' + msg, 'line-info'); }
-function logPrint(msg){ log(msg, 'line-print'); }
-function logSys(msg)  { log(msg, 'line-sys'); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const logErr  = m => log('✗ ' + m, 'l-err');
+const logWarn = m => log('⚠ ' + m, 'l-warn');
+const logInfo = m => log('ℹ ' + m, 'l-info');
+const logPrint= m => log(m, 'l-print');
+const logSys  = m => log(m, 'l-sys');
+const logEsp  = m => log('📡 ' + m, 'l-esp');
 
-// ─── SIDEBAR UPDATES ────────────────────────────────────────
-function updateSidebar() {
+// ─── TABS ─────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.view).classList.add('active');
+  });
+});
+
+// ─── SIDEBAR UPDATES ─────────────────────────────────────────
+function updateUI() {
   // Variables
-  const vl = document.getElementById('var-list');
-  const vc = document.getElementById('var-count');
-  const entries = Object.entries(STATE.vars);
-  vc.textContent = entries.length;
-  vl.innerHTML = entries.length === 0
-    ? '<span style="color:var(--dim);font-size:10px">vacío</span>'
-    : entries.map(([k,v])=>`<div class="sb-item"><span class="sb-key">${k}</span><span class="sb-val">${String(v.value).substring(0,20)}</span></div>`).join('');
+  const vl = document.getElementById('var-list-ui');
+  const entries = Object.entries(S.vars);
+  document.getElementById('var-count-lbl').textContent = entries.length;
+  if(entries.length === 0) {
+    vl.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div>Sin variables</div></div>';
+  } else {
+    vl.innerHTML = entries.map(([k,v]) => `
+      <div class="var-card">
+        <div class="var-type-badge">${v.type.toUpperCase()}</div>
+        <div class="var-info">
+          <div class="var-name">${k}</div>
+          <div class="var-val">${String(v.value)}</div>
+        </div>
+        <div class="var-del" onclick="execCmd('$variable.borrar(${k})')">🗑</div>
+      </div>`).join('');
+  }
 
-  // Pins
-  const pl = document.getElementById('pin-list');
-  const pc = document.getElementById('pin-count');
-  const pins = Object.entries(STATE.pins);
-  pc.textContent = pins.length;
-  pl.innerHTML = pins.map(([n,p])=>`
-    <div class="pin-item">
-      <div class="pin-led ${p.value>0?'on':''}"></div>
-      <span style="color:var(--dim)">${n}</span>
-    </div>`).join('');
-
-  // Files
-  const fl = document.getElementById('file-list');
-  const fc = document.getElementById('file-count');
-  const files = Object.entries(STATE.files);
-  fc.textContent = files.length;
-  fl.innerHTML = files.length === 0
-    ? '<span style="color:var(--dim);font-size:10px">vacío</span>'
-    : files.map(([k])=>`<div class="sb-item"><span class="sb-key">📄 ${k}</span><span class="sb-val" style="cursor:pointer;color:var(--accent2)" onclick="openFile('${k}')">abrir</span></div>`).join('');
+  // Pines
+  const pg = document.getElementById('pin-grid-ui');
+  const pins = Object.entries(S.pins);
+  document.getElementById('pin-count-lbl').textContent = pins.length;
+  if(pins.length === 0) {
+    pg.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔌</div><div>Sin pines</div></div>';
+  } else {
+    pg.innerHTML = pins.map(([n,p]) => `
+      <div class="pin-card ${p.value>0?'on':''}" onclick="togglePin('${n}')">
+        <div class="pin-led"></div>
+        <div class="pin-num">PIN ${n}</div>
+        <div class="pin-mode-badge">${p.mode}</div>
+        <div class="pin-val">${p.value}</div>
+      </div>`).join('');
+  }
 
   // Loops
-  const ll = document.getElementById('loop-list');
-  const loops = Object.entries(STATE.loops);
-  if(loops.length===0) {
-    ll.innerHTML = '<span style="color:var(--dim);font-size:11px;padding:4px">Sin loops definidos.</span>';
-    return;
+  const ll = document.getElementById('loop-list-ui');
+  const loops = Object.entries(S.loops);
+  document.getElementById('loop-count-lbl').textContent = loops.length;
+  if(loops.length === 0) {
+    ll.innerHTML = '<div class="empty-state"><div class="empty-icon">🔁</div><div>Sin loops definidos</div></div>';
+  } else {
+    ll.innerHTML = loops.map(([name,lp]) => `
+      <div class="loop-card ${lp.running?'running':''}">
+        <div class="loop-header">
+          <div class="loop-indicator"></div>
+          <div class="loop-name">${name}</div>
+          <div class="loop-lines">${lp.rawLines ? lp.rawLines.length : 0} líneas</div>
+          <div class="loop-actions">
+            ${lp.running
+              ? `<button class="loop-btn-action stop" onclick="execCmd('$loop.stop(${name})')">⏹</button>`
+              : `<button class="loop-btn-action run" onclick="execCmd('$loop.init(${name})')">▶</button>`
+            }
+          </div>
+        </div>
+        ${lp.rawLines && lp.rawLines.length > 0 ? `
+        <div class="loop-body-preview">${lp.rawLines.slice(0,4).map(l=>'<div>'+escHtml(l)+'</div>').join('')}${lp.rawLines.length>4?`<div style="color:var(--dim2)">... +${lp.rawLines.length-4} más</div>`:''}</div>
+        ` : ''}
+      </div>`).join('');
   }
-  ll.innerHTML = loops.map(([name,lp])=>`
-    <div class="loop-chip ${lp.running?'running':'stopped'}">
-      <div class="ldot"></div>
-      <span>${name}</span>
-      ${lp.running
-        ? `<button class="loop-btn" onclick="stopLoop('${name}')">⏹ stop</button>`
-        : `<button class="loop-btn start" onclick="startLoop('${name}')">▶ run</button>`
-      }
-    </div>`).join('');
 
-  // Runtime dot
-  const anyRunning = Object.values(STATE.loops).some(l=>l.running);
-  const dot = document.getElementById('runtime-dot');
-  const lbl = document.getElementById('runtime-label');
-  dot.classList.toggle('active', anyRunning);
-  lbl.textContent = anyRunning ? 'RUNNING' : 'IDLE';
+  updateEspUI();
 }
 
-// ─── DEBUG ───────────────────────────────────────────────────
-function dbgPush(info) {
-  if(!STATE.debugMode) return;
-  const dc = document.getElementById('debug-content');
+function updateEspUI() {
+  const e = S.esp;
+  const dot = document.getElementById('esp-dot');
+  const lbl = document.getElementById('esp-label');
+  const btn = document.getElementById('btn-connect');
+  document.getElementById('stat-ip').textContent    = e.ip || '—';
+  document.getElementById('stat-port').textContent  = e.port;
+  document.getElementById('stat-status').textContent = e.connected ? 'Conectado' : 'Desconectado';
+  document.getElementById('stat-status').className  = 'esp-stat-val ' + (e.connected ? 'ok' : 'err');
+  document.getElementById('stat-ping').textContent  = e.ping !== null ? e.ping + ' ms' : '—';
+  document.getElementById('stat-cmds').textContent  = e.cmdsSent;
+
+  if(e.connected) {
+    dot.className = 'esp-dot connected';
+    lbl.textContent = e.ip;
+    lbl.className = 'ok';
+    btn.textContent = 'Desconectar';
+    btn.className = 'connected';
+    btn.onclick = espDisconnect;
+  } else {
+    dot.className = 'esp-dot';
+    lbl.textContent = 'SIN CONEXIÓN';
+    lbl.className = '';
+    btn.textContent = 'WiFi ESP32';
+    btn.className = '';
+    btn.onclick = openConnectModal;
+  }
+}
+
+// ─── DEBUG ────────────────────────────────────────────────────
+const dbgEl = document.getElementById('debug-content');
+function dbg(info) {
+  if(!S.debug) return;
   const d = document.createElement('div');
-  d.innerHTML = Object.entries(info).map(([k,v])=>{
-    let cls = 'dbg-log';
-    if(k==='linea') cls='dbg-line';
-    if(k==='var')   cls='dbg-var';
-    if(k==='cond')  cls='dbg-cond';
-    return `<span class="${cls}">[${k}] ${v}</span>`;
-  }).join('<br>') + '<hr style="border-color:#1e2530;margin:3px 0">';
-  dc.appendChild(d);
-  dc.scrollTop = dc.scrollHeight;
-  document.getElementById('debug-indicator').style.display = STATE.debugMode ? 'flex' : 'none';
+  d.className = 'dbg-row';
+  d.innerHTML = Object.entries(info).map(([k,v]) => {
+    let cls = k==='cond' ? (v?'dbg-cond-t':'dbg-cond-f') : k==='linea'?'dbg-k':'dbg-v';
+    return `<span class="dbg-k">[${k}]</span> <span class="${cls}">${escHtml(String(v))}</span>`;
+  }).join('  ');
+  dbgEl.appendChild(d);
+  dbgEl.scrollTop = dbgEl.scrollHeight;
 }
-function clearDebug() {
-  document.getElementById('debug-content').innerHTML = '<span class="dbg-log">Debug limpiado.</span>';
+function openDebug()  { document.getElementById('debug-overlay').classList.add('open'); }
+function closeDebug() { document.getElementById('debug-overlay').classList.remove('open'); }
+
+// ─── ESP32 HTTP ───────────────────────────────────────────────
+async function espSend(nativeCmd) {
+  if(!S.esp.connected) {
+    logWarn('ESP32 no conectado. Simulando localmente.');
+    return null;
+  }
+  const url = `http://${S.esp.ip}:${S.esp.port}/cmd?c=${encodeURIComponent(nativeCmd)}`;
+  const t0 = Date.now();
+  try {
+    const r = await fetch(url, { method:'GET', signal: AbortSignal.timeout(3000) });
+    S.esp.ping = Date.now() - t0;
+    S.esp.cmdsSent++;
+    const j = await r.json();
+    updateEspUI();
+    return j;
+  } catch(e) {
+    S.esp.ping = null;
+    logEsp('Error: ' + e.message);
+    updateEspUI();
+    return null;
+  }
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function espConnect() {
+  const ip   = document.getElementById('esp-ip-input').value.trim();
+  const port = parseInt(document.getElementById('esp-port-input').value) || 80;
+  await doConnect(ip, port);
+}
 
-function resolveValue(raw) {
-  // reemplaza variable.leer X con su valor
-  let s = String(raw).trim();
-  s = s.replace(/variable\.leer\s+(\w+)/g, (_,name) => {
-    const v = STATE.vars[name];
-    if(!v) throw new Error(`Variable '${name}' no existe`);
-    return v.value;
-  });
+async function doConnect(ip, port) {
+  if(!ip) { logErr('Ingresa la IP del ESP32'); return; }
+  S.esp.ip = ip; S.esp.port = port;
+  document.getElementById('esp-dot').className = 'esp-dot connecting';
+  document.getElementById('esp-label').textContent = 'Conectando...';
+  logInfo(`Conectando a ESP32 en ${ip}:${port}...`);
+
+  const url = `http://${ip}:${port}/ping`;
+  const t0 = Date.now();
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    S.esp.ping = Date.now() - t0;
+    S.esp.connected = true;
+    logEsp(`Conectado! Latencia: ${S.esp.ping}ms`);
+    log('✔ ESP32 listo', 'l-ok');
+  } catch(e) {
+    // Intento fallback con /cmd?c=ping
+    try {
+      const r2 = await fetch(`http://${ip}:${port}/cmd?c=ping`, { signal: AbortSignal.timeout(3000) });
+      S.esp.ping = Date.now() - t0;
+      S.esp.connected = true;
+      logEsp(`Conectado! Latencia: ${S.esp.ping}ms`);
+    } catch(e2) {
+      S.esp.connected = false;
+      logErr(`No se pudo conectar a ${ip}:${port} — ${e2.message}`);
+      logWarn('Continuando en modo simulación local.');
+    }
+  }
+  updateUI();
+  closeConnectModal();
+}
+
+function espDisconnect() {
+  S.esp.connected = false;
+  S.esp.ping = null;
+  logWarn('ESP32 desconectado.');
+  updateUI();
+}
+
+// ─── CONNECT MODAL ────────────────────────────────────────────
+function openConnectModal() {
+  document.getElementById('connect-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-ip').focus(), 100);
+}
+function closeConnectModal() { document.getElementById('connect-modal').classList.remove('open'); }
+async function connectFromModal() {
+  const ip   = document.getElementById('modal-ip').value.trim();
+  const port = parseInt(document.getElementById('modal-port').value) || 80;
+  document.getElementById('esp-ip-input').value   = ip;
+  document.getElementById('esp-port-input').value = port;
+  await doConnect(ip, port);
+}
+
+// ─── PARSER DE SINTAXIS $comando(args) ───────────────────────
+function parseTimbito(raw) {
+  // Devuelve { name, args[] } o null
+  const s = raw.trim();
+  if(!s.startsWith('$')) return null;
+
+  // Encuentra el primer (
+  const pi = s.indexOf('(');
+  if(pi === -1) {
+    // $comando sin paréntesis → nombre solo
+    return { name: s.slice(1), args: [] };
+  }
+
+  const name = s.slice(1, pi).trim();
+  // Extrae contenido entre paréntesis (maneja anidación)
+  let depth = 0, start = pi, end = -1;
+  for(let i = pi; i < s.length; i++) {
+    if(s[i]==='(') depth++;
+    if(s[i]===')') { depth--; if(depth===0){ end=i; break; } }
+  }
+
+  const inner = end > -1 ? s.slice(pi+1, end) : s.slice(pi+1);
+  const args = splitArgs(inner);
+  return { name, args };
+}
+
+function splitArgs(s) {
+  // Split por comas respetando paréntesis y comillas
+  const args = [];
+  let cur = '', depth = 0, inQ = false, qChar = '';
+  for(let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if(inQ) { cur+=c; if(c===qChar) inQ=false; continue; }
+    if(c==='"'||c==="'") { inQ=true; qChar=c; cur+=c; continue; }
+    if(c==='(') { depth++; cur+=c; continue; }
+    if(c===')') { depth--; cur+=c; continue; }
+    if(c===',' && depth===0) { args.push(cur.trim()); cur=''; continue; }
+    cur += c;
+  }
+  if(cur.trim()) args.push(cur.trim());
+  return args;
+}
+
+// ─── RESOLVE / EVAL ──────────────────────────────────────────
+function resolveArg(a) {
+  // Quita comillas
+  const s = a.trim();
+  if((s.startsWith('"')&&s.endsWith('"'))||(s.startsWith("'")&&s.endsWith("'")))
+    return s.slice(1,-1);
+  // Si es $variable.leer(x)
+  if(s.startsWith('$')) {
+    const p = parseTimbito(s);
+    if(p && (p.name==='variable.leer'||p.name==='var.leer')) {
+      const v = S.vars[p.args[0]];
+      return v ? v.value : 0;
+    }
+  }
+  // Si tiene operadores
+  if(/[+\-*/%]/.test(s)) {
+    try {
+      // reemplaza $variable.leer(x)
+      let expr = s.replace(/\$variable\.leer\((\w+)\)/g, (_,n) => {
+        const v = S.vars[n]; return v ? v.value : 0;
+      });
+      return Function('"use strict";return (' + expr + ')')();
+    } catch(e) {}
+  }
+  // Número
+  if(!isNaN(s) && s !== '') return Number(s);
   return s;
 }
 
-function evalExpr(expr) {
-  // Evalúa expresión matemática/comparativa de forma segura
-  let s = resolveValue(expr);
-  // Sanitize: solo números, operadores, espacios, comillas simples
-  s = s.replace(/[^0-9+\-*/%<>=!&|.()\s"'a-zA-Z_]/g, '');
+function evalCond(expr) {
+  let s = String(expr);
+  s = s.replace(/\$variable\.leer\((\w+)\)/g, (_,n) => {
+    const v = S.vars[n]; return v !== undefined ? v.value : 0;
+  });
   try {
-    // eslint-disable-next-line no-new-func
-    return Function('"use strict"; return (' + s + ')')();
+    return !!Function('"use strict";return (' + s + ')')();
   } catch(e) {
-    throw new Error(`Expresión inválida: ${expr}`);
+    throw new Error('Condición inválida: ' + expr);
   }
 }
 
-function evalCondition(cond) {
-  try {
-    const result = evalExpr(cond);
-    return !!result;
-  } catch(e) {
-    throw new Error(`Condición inválida: ${cond}`);
+// ─── DELAY ───────────────────────────────────────────────────
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+// ─── EJECUTAR COMANDO ÚNICO ───────────────────────────────────
+async function execCmd(raw, loopRef) {
+  raw = raw.trim();
+  if(!raw || raw.startsWith('//')) return;
+
+  // Soporte bloques multilínea sin $ (para scripts)
+  if(!raw.startsWith('$')) {
+    // puede ser if/while/loop bloque inline dentro de script
+    logWarn('Usa $comando(args) — ' + raw.slice(0,30));
+    return;
+  }
+
+  const p = parseTimbito(raw);
+  if(!p) { logErr('Sintaxis inválida: ' + raw); return; }
+  const { name, args } = p;
+
+  dbg({ cmd: name, args: args.join(', ') });
+
+  // ══ VARIABLES ══
+  if(name === 'variable.crear') {
+    const vname = args[0], type = args[1] || 'number';
+    if(!vname) { logErr('$variable.crear(nombre)'); return; }
+    if(S.vars[vname]) { logWarn(`Variable '${vname}' ya existe`); return; }
+    S.vars[vname] = { type, value: type==='string'?'':0 };
+    log(`✔ var ${vname} [${type}] creada`);
+    updateUI();
+    return;
+  }
+
+  if(name === 'variable.editar' || name === 'variable.edit') {
+    const vname = args[0];
+    if(!vname) { logErr('$variable.editar(nombre, valor)'); return; }
+    if(!S.vars[vname]) { logErr(`Variable '${vname}' no existe`); return; }
+    const raw2 = args.slice(1).join(',');
+    let val;
+    try { val = resolveArg(raw2); } catch(e) { val = raw2; }
+    S.vars[vname].value = val;
+    dbg({ var: vname, '=': String(val) });
+    updateUI();
+    return;
+  }
+
+  if(name === 'variable.leer' || name === 'var.leer') {
+    const vname = args[0];
+    if(!S.vars[vname]) { logErr(`Variable '${vname}' no existe`); return; }
+    logInfo(`${vname} = ${S.vars[vname].value}`);
+    return;
+  }
+
+  if(name === 'variable.borrar' || name === 'variable.delete') {
+    const vname = args[0];
+    delete S.vars[vname];
+    log(`✔ variable '${vname}' eliminada`);
+    updateUI();
+    return;
+  }
+
+  if(name === 'variables.listar') {
+    if(Object.keys(S.vars).length===0) { logInfo('Sin variables'); return; }
+    Object.entries(S.vars).forEach(([k,v]) => logInfo(`${k} [${v.type}] = ${v.value}`));
+    return;
+  }
+
+  // ══ PINES ══
+  if(name === 'pin.salida' || name === 'pin.crear.salida') {
+    const num = String(resolveArg(args[0]));
+    S.pins[num] = { mode:'OUTPUT', value:0 };
+    log(`✔ pin ${num} [OUTPUT] creado`);
+    await espSend(`PIN_OUT:${num}`);
+    updateUI();
+    return;
+  }
+
+  if(name === 'pin.entrada' || name === 'pin.crear.entrada') {
+    const num = String(resolveArg(args[0]));
+    S.pins[num] = { mode:'INPUT', value:0 };
+    log(`✔ pin ${num} [INPUT] creado`);
+    await espSend(`PIN_IN:${num}`);
+    updateUI();
+    return;
+  }
+
+  if(name === 'pin.escribir') {
+    const num = String(resolveArg(args[0]));
+    const val = resolveArg(args[1]);
+    if(!S.pins[num]) S.pins[num] = { mode:'OUTPUT', value:0 };
+    S.pins[num].value = val;
+    dbg({ pin: num, val: String(val) });
+    const res = await espSend(`PIN_WRITE:${num}:${val}`);
+    if(res) logEsp(`pin ${num} ← ${val}`);
+    updateUI();
+    return;
+  }
+
+  if(name === 'pin.leer') {
+    const num = String(resolveArg(args[0]));
+    const res = await espSend(`PIN_READ:${num}`);
+    if(res && res.val !== undefined) {
+      S.pins[num] = S.pins[num] || { mode:'INPUT', value:0 };
+      S.pins[num].value = res.val;
+      logInfo(`pin ${num} = ${res.val}`);
+      updateUI();
+    } else {
+      const v = S.pins[num]?.value ?? 0;
+      logInfo(`pin ${num} = ${v} (local)`);
+    }
+    return;
+  }
+
+  // ══ LOOPS ══
+  if(name === 'loop.init') {
+    const lname = args[0];
+    if(!lname) { logErr('$loop.init(nombre)'); return; }
+    startLoop(lname);
+    return;
+  }
+
+  if(name === 'loop.stop') {
+    const lname = args[0];
+    if(!lname) { logErr('$loop.stop(nombre)'); return; }
+    stopLoop(lname);
+    return;
+  }
+
+  // ══ DELAY ══
+  if(name === 'delay') {
+    const ms = resolveArg(args[0]);
+    await wait(Number(ms));
+    return;
+  }
+
+  // ══ PRINT ══
+  if(name === 'print') {
+    const val = args.map(a => resolveArg(a)).join(' ');
+    logPrint('📤 ' + val);
+    return;
+  }
+
+  // ══ ARCHIVO ══
+  if(name === 'archivo.crear') {
+    const fname = args[0];
+    if(!fname) { logErr('$archivo.crear(nombre)'); return; }
+    S.files[fname] = S.files[fname] || { content:'' };
+    log(`✔ archivo '${fname}' creado`);
+    return;
+  }
+
+  if(name === 'archivo.abrir') {
+    const fname = args[0];
+    if(!fname) { logErr('$archivo.abrir(nombre)'); return; }
+    openEditor(fname);
+    return;
+  }
+
+  if(name === 'archivo.ejecutar') {
+    const fname = args[0];
+    const f = S.files[fname];
+    if(!f) { logErr(`Archivo '${fname}' no existe`); return; }
+    log(`▶ ejecutando '${fname}'...`, 'l-info');
+    await runScript(f.content);
+    return;
+  }
+
+  if(name === 'archivo.borrar' || name === 'archivo.delete') {
+    delete S.files[args[0]];
+    log(`✔ archivo eliminado`);
+    return;
+  }
+
+  // ══ FUNC ══
+  if(name === 'func.llamar' || name === 'func.call') {
+    const fname = args[0];
+    const fn = S.funcs[fname];
+    if(!fn) { logErr(`Función '${fname}' no existe`); return; }
+    for(const s of fn) await execStep(s, loopRef);
+    return;
+  }
+
+  // ══ DEBUG ══
+  if(name === 'debug.on')    { S.debug=true;  logInfo('Debugger ON'); openDebug(); return; }
+  if(name === 'debug.off')   { S.debug=false; logInfo('Debugger OFF'); return; }
+  if(name === 'debug.clear') { dbgEl.innerHTML=''; return; }
+
+  // ══ SISTEMA ══
+  if(name === 'clear' || name === 'cls') { outEl.innerHTML=''; return; }
+
+  if(name === 'reset') {
+    Object.values(S.loops).forEach(l => l.running=false);
+    Object.assign(S, { vars:{}, pins:{}, loops:{}, funcs:{}, files:{} });
+    updateUI();
+    logWarn('Sistema reseteado.');
+    return;
+  }
+
+  if(name === 'help') {
+    showHelp();
+    return;
+  }
+
+  // ══ ESP32 directo ══
+  if(name === 'esp.send') {
+    const cmdRaw = args[0];
+    if(!cmdRaw) { logErr('$esp.send(comando)'); return; }
+    const res = await espSend(cmdRaw);
+    logEsp(res ? JSON.stringify(res) : 'sin respuesta');
+    return;
+  }
+
+  if(name === 'esp.ping') {
+    const t0 = Date.now();
+    const res = await espSend('ping');
+    logEsp(res ? `pong! ${Date.now()-t0}ms` : 'sin respuesta');
+    return;
+  }
+
+  logErr(`Comando desconocido: $${name}`);
+}
+
+// ─── AST STEP EXECUTOR ───────────────────────────────────────
+async function execStep(step, loopRef) {
+  if(loopRef && !loopRef.running) throw new Error('__STOPPED__');
+
+  if(step.type === 'cmd') {
+    dbg({ linea: step.cmd });
+    await execCmd(step.cmd, loopRef);
+    return;
+  }
+
+  if(step.type === 'if') {
+    const cond = evalCond(step.cond);
+    dbg({ if: step.cond, result: cond });
+    const block = cond ? step.then : step.else;
+    for(const s of block) await execStep(s, loopRef);
+    return;
+  }
+
+  if(step.type === 'while') {
+    let n = 0;
+    while(true) {
+      if(loopRef && !loopRef.running) break;
+      const cond = evalCond(step.cond);
+      dbg({ while: step.cond, result: cond });
+      if(!cond) break;
+      for(const s of step.body) await execStep(s, loopRef);
+      if(++n > 100000) { logErr('while: demasiadas iteraciones'); break; }
+    }
+    return;
   }
 }
 
-// ─── PARSER ──────────────────────────────────────────────────
-// Convierte array de strings en AST
-function parse(lines) {
-  const tokens = lines.map(l=>l.trim()).filter(l=>l && !l.startsWith('//'));
+// ─── SCRIPT PARSER (MULTILINEA) ──────────────────────────────
+// Parsea un script completo con loops, ifs, whiles, funcs
+function parseScript(code) {
+  const lines = code.split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('//'));
   let idx = 0;
 
-  function parseBlock(stopKeywords) {
+  function parseBlock(stopWhen) {
     const body = [];
-    while(idx < tokens.length) {
-      const line = tokens[idx];
-      if(stopKeywords.some(k => line === k || line.startsWith(k+' '))) break;
+    while(idx < lines.length) {
+      const line = lines[idx];
+      if(stopWhen && stopWhen(line)) break;
 
       // IF
-      if(line.startsWith('if ')) {
-        const cond = line.slice(3).trim();
+      if(line.startsWith('$if(') || line.startsWith('$if (')) {
+        const cond = extractInner(line);
         idx++;
-        const thenBlock = parseBlock(['else','if.final']);
-        let elseBlock = [];
-        if(idx < tokens.length && (tokens[idx]==='else' || tokens[idx].startsWith('else '))) {
+        const thenB = parseBlock(l => l==='$else' || l==='$if.final' || l==='$endif');
+        let elseB = [];
+        if(idx<lines.length && (lines[idx]==='$else' || lines[idx].startsWith('$else('))) {
           idx++;
-          elseBlock = parseBlock(['if.final']);
+          elseB = parseBlock(l => l==='$if.final' || l==='$endif');
         }
-        if(idx < tokens.length && tokens[idx]==='if.final') idx++;
-        body.push({ type:'if', cond, then:thenBlock, else:elseBlock });
+        if(idx<lines.length) idx++;
+        body.push({ type:'if', cond, then:thenB, else:elseB });
         continue;
       }
+
       // WHILE
-      if(line.startsWith('while ')) {
-        const cond = line.slice(6).trim();
+      if(line.startsWith('$while(')) {
+        const cond = extractInner(line);
         idx++;
-        const whileBody = parseBlock(['endwhile']);
-        if(idx < tokens.length && tokens[idx]==='endwhile') idx++;
-        body.push({ type:'while', cond, body:whileBody });
+        const wb = parseBlock(l => l==='$endwhile' || l==='$while.final');
+        if(idx<lines.length) idx++;
+        body.push({ type:'while', cond, body:wb });
         continue;
       }
-      // FUNC def
-      if(line.startsWith('func.')) {
-        const name = line.slice(5).trim();
-        idx++;
-        const funcBody = parseBlock(['func.end']);
-        if(idx < tokens.length) idx++;
-        STATE.funcs[name] = funcBody;
-        log(`✔ función '${name}' definida`, 'line-ok');
-        continue;
-      }
-      // LOOP body def (handled externally)
-      if(line.startsWith('loop.') && !line.includes(' ') && line !== 'loop.final') {
-        // solo skip
-        idx++;
-        continue;
-      }
-      if(line === 'loop.final') { idx++; continue; }
 
       body.push({ type:'cmd', cmd:line });
       idx++;
@@ -634,289 +1497,125 @@ function parse(lines) {
     return body;
   }
 
-  return parseBlock([]);
+  return parseBlock(null);
 }
 
-// ─── RUNTIME ─────────────────────────────────────────────────
-async function execStep(step, loopRef) {
-  if(loopRef && !loopRef.running) throw new Error('__STOPPED__');
+function extractInner(line) {
+  const pi = line.indexOf('(');
+  const pe = line.lastIndexOf(')');
+  if(pi<0) return '';
+  return pe>pi ? line.slice(pi+1, pe) : line.slice(pi+1);
+}
 
-  if(step.type === 'if') {
-    const condStr = resolveValue(step.cond);
-    const result = evalCondition(condStr);
-    dbgPush({ linea: `if ${step.cond}`, cond: String(result) });
-    const block = result ? step.then : step.else;
-    for(const s of block) await execStep(s, loopRef);
-    return;
-  }
+// ─── SCRIPT RUNNER ────────────────────────────────────────────
+async function runScript(code) {
+  const lines = code.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('//'));
+  let i = 0;
 
-  if(step.type === 'while') {
-    let safety = 0;
-    while(true) {
-      if(loopRef && !loopRef.running) break;
-      const condStr = resolveValue(step.cond);
-      const result = evalCondition(condStr);
-      dbgPush({ linea:`while ${step.cond}`, cond: String(result) });
-      if(!result) break;
-      for(const s of step.body) await execStep(s, loopRef);
-      if(++safety > 100000) { logErr('while: límite de iteraciones alcanzado'); break; }
+  while(i < lines.length) {
+    const line = lines[i];
+
+    // LOOP DEFINITION: $loop.nombre( ... )
+    // Formato: $loop.blink(
+    //   $pin.escribir(2,1)
+    //   $delay(500)
+    // )
+    const loopDefMatch = line.match(/^\$loop\.(\w+)\($/);
+    if(loopDefMatch) {
+      const lname = loopDefMatch[1];
+      if(lname !== 'init' && lname !== 'stop' && lname !== 'final') {
+        i++;
+        const rawLines = [];
+        let depth = 0;
+        while(i < lines.length) {
+          const l = lines[i];
+          if(l === ')' && depth === 0) { i++; break; }
+          if(l.endsWith('(')) depth++;
+          if(l === ')') depth--;
+          rawLines.push(l);
+          i++;
+        }
+        const ast = parseScript(rawLines.join('\n'));
+        S.loops[lname] = { body: ast, rawLines, running: false };
+        log(`✔ loop '${lname}' definido (${rawLines.length} líneas)`, 'l-ok');
+        updateUI();
+        continue;
+      }
     }
-    return;
-  }
 
-  if(step.type === 'cmd') {
-    dbgPush({ linea: step.cmd });
-    await execCmd(step.cmd, loopRef);
-  }
-}
-
-async function execLines(lines, loopRef) {
-  const ast = parse(lines);
-  for(const step of ast) {
-    if(loopRef && !loopRef.running) break;
-    await execStep(step, loopRef);
-  }
-}
-
-// ─── COMANDO ÚNICO ───────────────────────────────────────────
-async function execCmd(raw, loopRef) {
-  const cmd = raw.trim();
-  if(!cmd || cmd.startsWith('//')) return;
-
-  // PRINT
-  if(cmd.startsWith('print ')) {
-    const val = resolveValue(cmd.slice(6).trim());
-    logPrint('📤 ' + val);
-    return;
-  }
-
-  // DELAY
-  if(cmd.startsWith('delay ')) {
-    const ms = parseInt(resolveValue(cmd.slice(6)));
-    await delay(ms);
-    return;
-  }
-
-  // VARIABLE CREAR
-  if(cmd.startsWith('variable.crear ')) {
-    const parts = cmd.slice(15).trim().split(' ');
-    const name = parts[0];
-    const type = parts[1] || 'number';
-    if(STATE.vars[name]) { logWarn(`Variable '${name}' ya existe`); return; }
-    STATE.vars[name] = { type, value: type==='string' ? '' : 0 };
-    log(`✔ var ${name} (${type}) creada`, 'line-ok');
-    updateSidebar();
-    return;
-  }
-
-  // VARIABLE EDIT
-  if(cmd.startsWith('variable.edit ')) {
-    const rest = cmd.slice(14).trim();
-    const sp = rest.indexOf(' ');
-    const name = rest.slice(0, sp);
-    let expr = rest.slice(sp+1).trim();
-    if(!STATE.vars[name]) { logErr(`Variable '${name}' no existe`); return; }
-    let val;
-    try {
-      val = evalExpr(expr);
-    } catch(e) {
-      // intenta como string
-      val = resolveValue(expr);
+    // FUNC DEFINITION: $func.nombre(
+    const funcDefMatch = line.match(/^\$func\.(\w+)\($/);
+    if(funcDefMatch) {
+      const fname = funcDefMatch[1];
+      if(fname !== 'call' && fname !== 'llamar') {
+        i++;
+        const funcLines = [];
+        while(i < lines.length && lines[i] !== ')') {
+          funcLines.push(lines[i]);
+          i++;
+        }
+        if(i < lines.length) i++;
+        S.funcs[fname] = parseScript(funcLines.join('\n'));
+        log(`✔ función '${fname}' definida`, 'l-ok');
+        continue;
+      }
     }
-    STATE.vars[name].value = val;
-    dbgPush({ var: `${name} = ${val}` });
-    updateSidebar();
-    return;
+
+    // IF BLOCK
+    if(line.startsWith('$if(')) {
+      const blockLines = [line];
+      i++;
+      let depth = 0;
+      while(i < lines.length) {
+        const l = lines[i];
+        if(l.startsWith('$if(')) depth++;
+        if(l === '$if.final' || l === '$endif') {
+          blockLines.push(l); i++;
+          if(depth === 0) break;
+          depth--;
+          continue;
+        }
+        blockLines.push(l);
+        i++;
+      }
+      const ast = parseScript(blockLines.join('\n'));
+      for(const s of ast) await execStep(s, null);
+      continue;
+    }
+
+    // WHILE BLOCK
+    if(line.startsWith('$while(')) {
+      const blockLines = [line];
+      i++;
+      while(i < lines.length && lines[i] !== '$endwhile' && lines[i] !== '$while.final') {
+        blockLines.push(lines[i]);
+        i++;
+      }
+      blockLines.push('$endwhile');
+      if(i < lines.length) i++;
+      const ast = parseScript(blockLines.join('\n'));
+      for(const s of ast) await execStep(s, null);
+      continue;
+    }
+
+    // COMANDO NORMAL
+    await execCmd(line, null);
+    i++;
   }
 
-  // VARIABLE LEER
-  if(cmd.startsWith('variable.leer ')) {
-    const name = cmd.slice(14).trim();
-    const v = STATE.vars[name];
-    if(!v) { logErr(`Variable '${name}' no existe`); return; }
-    logInfo(`${name} = ${v.value}`);
-    return;
-  }
-
-  // VARIABLE DELETE
-  if(cmd.startsWith('variable.borrar ')) {
-    const name = cmd.slice(16).trim();
-    delete STATE.vars[name];
-    log(`✔ variable '${name}' eliminada`);
-    updateSidebar();
-    return;
-  }
-
-  // CREAR PIN
-  if(cmd.startsWith('crear.pin.salida ') || cmd.startsWith('crear.pin.entrada ')) {
-    const mode = cmd.startsWith('crear.pin.salida') ? 'output' : 'input';
-    const num = cmd.split(' ')[1];
-    STATE.pins[num] = { mode, value: 0 };
-    log(`✔ pin ${num} [${mode}] creado`);
-    updateSidebar();
-    return;
-  }
-
-  // ESCRIBIR PIN
-  if(cmd.startsWith('escribir.pin ')) {
-    const parts = cmd.slice(13).trim().split(' ');
-    const num = parts[0];
-    const val = parseInt(resolveValue(parts[1]));
-    if(!STATE.pins[num]) STATE.pins[num] = { mode:'output', value:0 };
-    STATE.pins[num].value = val;
-    updateSidebar();
-    return;
-  }
-
-  // LEER PIN
-  if(cmd.startsWith('leer.pin ')) {
-    const num = cmd.slice(9).trim();
-    const p = STATE.pins[num];
-    if(!p) { logErr(`Pin ${num} no existe`); return; }
-    logInfo(`pin ${num} = ${p.value}`);
-    return;
-  }
-
-  // LOOP DEFINICIÓN (con cuerpo en archivo)
-  // loop.NAME ... loop.final  → se parsea en bloque aparte
-  // Aquí soportamos def inline vía archivo
-
-  // LOOP INIT
-  if(cmd.startsWith('loop.init ')) {
-    const name = cmd.slice(10).trim();
-    startLoop(name);
-    return;
-  }
-
-  // LOOP STOP
-  if(cmd.startsWith('loop.stop ')) {
-    const name = cmd.slice(10).trim();
-    stopLoop(name);
-    return;
-  }
-
-  // ARCHIVO CREAR
-  if(cmd.startsWith('archivo.crear ')) {
-    const name = cmd.slice(14).trim();
-    if(STATE.files[name]) { logWarn(`Archivo '${name}' ya existe`); return; }
-    STATE.files[name] = { content: '' };
-    log(`✔ archivo '${name}' creado`);
-    updateSidebar();
-    return;
-  }
-
-  // ARCHIVO ABRIR (abre editor)
-  if(cmd.startsWith('archivo.abrir ')) {
-    const name = cmd.slice(14).trim();
-    openFile(name);
-    return;
-  }
-
-  // ARCHIVO GUARDAR DESDE TERMINAL
-  if(cmd.startsWith('archivo.guardar ')) {
-    const parts = cmd.slice(16).trim().split(' ');
-    const name = parts[0];
-    const content = parts.slice(1).join(' ');
-    STATE.files[name] = { content };
-    log(`✔ archivo '${name}' guardado`);
-    updateSidebar();
-    return;
-  }
-
-  // ARCHIVO EJECUTAR
-  if(cmd.startsWith('archivo.ejecutar ')) {
-    const name = cmd.slice(17).trim();
-    const f = STATE.files[name];
-    if(!f) { logErr(`Archivo '${name}' no existe`); return; }
-    log(`▶ ejecutando archivo '${name}'...`, 'line-info');
-    await runScript(f.content);
-    return;
-  }
-
-  // DELETE ARCHIVO
-  if(cmd.startsWith('delet.archivo ') || cmd.startsWith('delete.archivo ')) {
-    const name = cmd.split(' ').slice(1).join(' ').trim();
-    if(!STATE.files[name]) { logErr(`Archivo '${name}' no existe`); return; }
-    delete STATE.files[name];
-    log(`✔ archivo '${name}' eliminado`);
-    updateSidebar();
-    return;
-  }
-
-  // FUNC CALL
-  if(cmd.startsWith('func.call ')) {
-    const name = cmd.slice(10).trim();
-    const fn = STATE.funcs[name];
-    if(!fn) { logErr(`Función '${name}' no existe`); return; }
-    log(`▶ func ${name}()`, 'line-info');
-    for(const s of fn) await execStep(s, loopRef);
-    return;
-  }
-
-  // DEBUG ON/OFF
-  if(cmd === 'debug.on')  { STATE.debugMode=true;  logInfo('Debugger activado'); document.getElementById('debug-indicator').style.display='flex'; clearDebug(); return; }
-  if(cmd === 'debug.off') { STATE.debugMode=false; logInfo('Debugger desactivado'); document.getElementById('debug-indicator').style.display='none'; return; }
-  if(cmd === 'debug.clear') { clearDebug(); return; }
-
-  // CLEAR
-  if(cmd === 'clear' || cmd === 'cls') { out.innerHTML = ''; return; }
-
-  // RESET
-  if(cmd === 'reset') {
-    Object.keys(STATE.loops).forEach(n => { STATE.loops[n].running = false; });
-    STATE.vars = {}; STATE.pins = {}; STATE.loops = {}; STATE.funcs = {}; STATE.files = {};
-    updateSidebar();
-    log('✔ sistema reseteado', 'line-warn');
-    return;
-  }
-
-  // HELP
-  if(cmd === 'help') {
-    const cmds = [
-      ['variable.crear <n> [tipo]','crear variable'],
-      ['variable.edit <n> <expr>','asignar valor'],
-      ['variable.leer <n>','leer variable'],
-      ['variable.borrar <n>','eliminar variable'],
-      ['crear.pin.salida <n>','crear pin salida'],
-      ['crear.pin.entrada <n>','crear pin entrada'],
-      ['escribir.pin <n> <v>','escribir pin'],
-      ['leer.pin <n>','leer pin'],
-      ['loop.init <name>','iniciar loop'],
-      ['loop.stop <name>','detener loop'],
-      ['archivo.crear <n>','crear archivo'],
-      ['archivo.abrir <n>','abrir editor'],
-      ['archivo.ejecutar <n>','ejecutar archivo'],
-      ['delet.archivo <n>','eliminar archivo'],
-      ['func.call <n>','llamar función'],
-      ['print <expr>','imprimir'],
-      ['delay <ms>','esperar ms'],
-      ['debug.on / debug.off','debugger'],
-      ['clear','limpiar terminal'],
-      ['reset','resetear todo'],
-    ];
-    cmds.forEach(([c,d])=> log(`  ${c.padEnd(30)} — ${d}`, 'line-info'));
-    return;
-  }
-
-  // VARS / PINS / LOOPS / FILES
-  if(cmd === 'vars')  { logInfo('Variables: ' + JSON.stringify(STATE.vars, null, 2)); return; }
-  if(cmd === 'loops') { logInfo('Loops: ' + Object.keys(STATE.loops).join(', ')||'ninguno'); return; }
-  if(cmd === 'files') { logInfo('Archivos: ' + Object.keys(STATE.files).join(', ')||'ninguno'); return; }
-  if(cmd === 'pins')  { logInfo('Pines: ' + JSON.stringify(STATE.pins)); return; }
-
-  logErr(`Comando desconocido: '${cmd}'  (escribe 'help')`);
+  updateUI();
 }
 
-// ─── LOOP RUNNER ─────────────────────────────────────────────
+// ─── LOOP ENGINE ─────────────────────────────────────────────
 function startLoop(name) {
-  const lp = STATE.loops[name];
-  if(!lp) { logErr(`Loop '${name}' no definido`); return; }
-  if(lp.running) { logWarn(`Loop '${name}' ya está corriendo`); return; }
+  const lp = S.loops[name];
+  if(!lp) { logErr(`Loop '${name}' no definido. Ábrelo en el editor.`); return; }
+  if(lp.running) { logWarn(`Loop '${name}' ya corre`); return; }
   lp.running = true;
-  log(`▶ loop '${name}' iniciado`, 'line-ok');
-  updateSidebar();
+  log(`▶ loop '${name}' iniciado`, 'l-ok');
+  updateUI();
 
-  lp.task = (async () => {
+  (async () => {
     try {
       while(lp.running) {
         for(const step of lp.body) {
@@ -925,135 +1624,53 @@ function startLoop(name) {
         }
       }
     } catch(e) {
-      if(e.message !== '__STOPPED__') logErr(`Loop '${name}' error: ${e.message}`);
+      if(e.message !== '__STOPPED__') logErr(`Loop '${name}': ${e.message}`);
     }
     lp.running = false;
-    log(`⏹ loop '${name}' detenido`, 'line-warn');
-    updateSidebar();
+    logWarn(`⏹ loop '${name}' parado`);
+    updateUI();
   })();
 }
 
 function stopLoop(name) {
-  const lp = STATE.loops[name];
-  if(!lp) { logErr(`Loop '${name}' no existe`); return; }
-  lp.running = false;
-  log(`⏹ loop '${name}' detenido`, 'line-warn');
-  updateSidebar();
+  if(!S.loops[name]) { logErr(`Loop '${name}' no existe`); return; }
+  S.loops[name].running = false;
+  logWarn(`⏹ loop '${name}' detenido`);
+  updateUI();
 }
 
-// ─── SCRIPT RUNNER ───────────────────────────────────────────
-// Parsea scripts completos incluyendo definición de loops/funcs
-async function runScript(code) {
-  const lines = code.split('\n').map(l=>l.trim()).filter(l=>l && !l.startsWith('//'));
-  let i = 0;
-
-  while(i < lines.length) {
-    const line = lines[i];
-
-    // LOOP DEFINITION
-    const loopMatch = line.match(/^loop\.(\w+)$/);
-    if(loopMatch && line !== 'loop.final') {
-      const name = loopMatch[1];
-      if(name === 'init' || name === 'stop') { i++; continue; }
-      i++;
-      const body = [];
-      const nested = [];
-      let depth = 0;
-      while(i < lines.length) {
-        const l = lines[i];
-        if(l.match(/^loop\.\w+$/) && !l.match(/^loop\.(init|stop|final)\b/)) depth++;
-        if(l === 'loop.final') {
-          if(depth === 0) { i++; break; }
-          depth--;
-        }
-        nested.push(l);
-        i++;
-      }
-      const ast = parse(nested);
-      STATE.loops[name] = { body: ast, running: false };
-      log(`✔ loop '${name}' definido (${nested.length} líneas)`, 'line-ok');
-      updateSidebar();
-      continue;
-    }
-
-    // FUNC DEFINITION
-    if(line.startsWith('func.') && !line.startsWith('func.call')) {
-      const name = line.slice(5).trim();
-      i++;
-      const funcLines = [];
-      while(i < lines.length && lines[i] !== 'func.end') {
-        funcLines.push(lines[i]);
-        i++;
-      }
-      if(i < lines.length) i++;
-      const ast = parse(funcLines);
-      STATE.funcs[name] = ast;
-      log(`✔ función '${name}' definida`, 'line-ok');
-      continue;
-    }
-
-    // BLOQUE IF a nivel de script
-    if(line.startsWith('if ')) {
-      const block = [];
-      block.push(line);
-      i++;
-      let depth = 0;
-      while(i < lines.length) {
-        const l = lines[i];
-        if(l.startsWith('if ')) depth++;
-        if(l === 'if.final') {
-          if(depth === 0) { block.push(l); i++; break; }
-          depth--;
-        }
-        block.push(l);
-        i++;
-      }
-      const ast = parse(block);
-      for(const s of ast) await execStep(s, null);
-      continue;
-    }
-
-    // BLOQUE WHILE a nivel de script
-    if(line.startsWith('while ')) {
-      const block = [];
-      block.push(line);
-      i++;
-      while(i < lines.length && lines[i] !== 'endwhile') {
-        block.push(lines[i]);
-        i++;
-      }
-      block.push('endwhile');
-      if(i < lines.length) i++;
-      const ast = parse(block);
-      for(const s of ast) await execStep(s, null);
-      continue;
-    }
-
-    // COMANDO SIMPLE
-    await execCmd(line, null);
-    i++;
-  }
+function togglePin(num) {
+  if(!S.pins[num] || S.pins[num].mode !== 'OUTPUT') return;
+  const newVal = S.pins[num].value > 0 ? 0 : 1;
+  execCmd(`$pin.escribir(${num}, ${newVal})`);
 }
 
 // ─── EDITOR ──────────────────────────────────────────────────
-let currentEditorFile = null;
+let currentFile = null;
 
-function openFile(name) {
-  if(!STATE.files[name]) STATE.files[name] = { content: '' };
-  currentEditorFile = name;
-  document.getElementById('editor-filename').textContent = `📄 ${name}`;
-  document.getElementById('editor-area').value = STATE.files[name].content;
+function openEditor(name) {
+  if(!S.files[name]) S.files[name] = { content: '' };
+  currentFile = name;
+  document.getElementById('editor-fname').textContent = `📄 ${name}`;
+  document.getElementById('editor-area').value = S.files[name].content;
   document.getElementById('editor-overlay').classList.add('open');
-  document.getElementById('editor-area').focus();
-  updateSidebar();
+  setTimeout(()=>document.getElementById('editor-area').focus(), 100);
 }
 
 function editorSave() {
-  if(!currentEditorFile) return;
-  STATE.files[currentEditorFile].content = document.getElementById('editor-area').value;
-  log(`✔ archivo '${currentEditorFile}' guardado`, 'line-ok');
-  document.getElementById('editor-status').textContent = '✔ guardado — ' + new Date().toLocaleTimeString();
-  updateSidebar();
+  if(!currentFile) return;
+  S.files[currentFile].content = document.getElementById('editor-area').value;
+  log(`✔ '${currentFile}' guardado`, 'l-ok');
+  document.getElementById('editor-bar').textContent = '✔ Guardado — ' + new Date().toLocaleTimeString();
+  updateUI();
+}
+
+async function editorRun() {
+  if(!currentFile) return;
+  S.files[currentFile].content = document.getElementById('editor-area').value;
+  editorClose();
+  log(`▶ ejecutando '${currentFile}'...`, 'l-info');
+  await runScript(S.files[currentFile].content);
 }
 
 function editorClose() {
@@ -1061,79 +1678,171 @@ function editorClose() {
   document.getElementById('cmd-input').focus();
 }
 
-// Ctrl+S en editor
 document.getElementById('editor-area').addEventListener('keydown', e => {
-  if(e.ctrlKey && e.key === 's') { e.preventDefault(); editorSave(); }
-  if(e.key === 'Tab') {
+  if(e.ctrlKey && e.key==='s') { e.preventDefault(); editorSave(); }
+  if(e.key==='Tab') {
     e.preventDefault();
-    const t = e.target;
-    const s = t.selectionStart, end = t.selectionEnd;
-    t.value = t.value.substring(0,s) + '    ' + t.value.substring(end);
-    t.selectionStart = t.selectionEnd = s + 4;
+    const t=e.target, s=t.selectionStart, en=t.selectionEnd;
+    t.value = t.value.slice(0,s) + '  ' + t.value.slice(en);
+    t.selectionStart = t.selectionEnd = s + 2;
   }
 });
 
-// ─── TERMINAL INPUT ──────────────────────────────────────────
-const input = document.getElementById('cmd-input');
+// ─── TERMINAL INPUT ───────────────────────────────────────────
+const inp = document.getElementById('cmd-input');
 
-input.addEventListener('keydown', async e => {
-  if(e.key === 'Enter') {
-    const raw = input.value.trim();
-    if(!raw) return;
-    STATE.history.unshift(raw);
-    STATE.histIdx = -1;
-    input.value = '';
-    logCmd(raw);
+async function sendCmd() {
+  const raw = inp.value.trim();
+  if(!raw) return;
+  S.history.unshift(raw);
+  S.histIdx = -1;
+  inp.value = '';
+  log(raw, 'l-cmd');
+  await runScript(raw);
+  updateUI();
+}
 
-    // Script multilínea pegado
-    if(raw.includes('\n')) {
-      await runScript(raw);
-      return;
-    }
-    await runScript(raw);
-    updateSidebar();
-  }
-
-  // Historial
+inp.addEventListener('keydown', async e => {
+  if(e.key === 'Enter') { e.preventDefault(); await sendCmd(); return; }
   if(e.key === 'ArrowUp') {
     e.preventDefault();
-    if(STATE.histIdx < STATE.history.length-1) {
-      STATE.histIdx++;
-      input.value = STATE.history[STATE.histIdx];
-    }
+    if(S.histIdx < S.history.length-1) { S.histIdx++; inp.value=S.history[S.histIdx]; }
   }
   if(e.key === 'ArrowDown') {
     e.preventDefault();
-    if(STATE.histIdx > 0) { STATE.histIdx--; input.value = STATE.history[STATE.histIdx]; }
-    else { STATE.histIdx = -1; input.value = ''; }
+    if(S.histIdx > 0) { S.histIdx--; inp.value=S.history[S.histIdx]; }
+    else { S.histIdx=-1; inp.value=''; }
   }
 });
 
-// Escape cierra editor
-document.addEventListener('keydown', e => {
-  if(e.key === 'Escape') editorClose();
-});
+function fillCmd(cmd) {
+  inp.value = cmd;
+  inp.focus();
+  // posiciona cursor dentro de ()
+  const pi = cmd.indexOf('(');
+  if(pi > -1) setTimeout(()=>inp.setSelectionRange(pi+1, inp.value.indexOf(')')<0?cmd.length:inp.value.indexOf(')')), 0);
+}
 
-// Click fuera del editor lo cierra
-document.getElementById('editor-overlay').addEventListener('click', e => {
-  if(e.target === document.getElementById('editor-overlay')) editorClose();
-});
+// ─── HELP ─────────────────────────────────────────────────────
+function showHelp() {
+  const cmds = [
+    ['$variable.crear(nombre)', 'crear variable'],
+    ['$variable.crear(nombre, string)', 'crear variable string'],
+    ['$variable.editar(nombre, valor)', 'asignar valor'],
+    ['$variable.leer(nombre)', 'leer variable'],
+    ['$variable.borrar(nombre)', 'eliminar variable'],
+    ['$variables.listar()', 'listar todas'],
+    ['$pin.salida(num)', 'crear pin OUTPUT'],
+    ['$pin.entrada(num)', 'crear pin INPUT'],
+    ['$pin.escribir(num, val)', 'escribir pin → ESP32'],
+    ['$pin.leer(num)', 'leer pin ← ESP32'],
+    ['$loop.nombre(', '...cuerpo... )  definir loop'],
+    ['$loop.init(nombre)', 'iniciar loop'],
+    ['$loop.stop(nombre)', 'detener loop'],
+    ['$archivo.crear(nombre)', 'crear archivo'],
+    ['$archivo.abrir(nombre)', 'abrir editor'],
+    ['$archivo.ejecutar(nombre)', 'ejecutar script'],
+    ['$func.nombre(', '...cuerpo... )  definir función'],
+    ['$func.llamar(nombre)', 'llamar función'],
+    ['$if(condicion)', '...  $if.final'],
+    ['$while(condicion)', '...  $endwhile'],
+    ['$delay(ms)', 'esperar ms'],
+    ['$print(valor)', 'imprimir'],
+    ['$esp.ping()', 'ping al ESP32'],
+    ['$esp.send(cmd)', 'enviar cmd nativo'],
+    ['$debug.on()  /  $debug.off()', 'debugger'],
+    ['$clear()', 'limpiar terminal'],
+    ['$reset()', 'resetear todo'],
+  ];
+  log('── COMANDOS timbitoOS v4 ──', 'l-info');
+  cmds.forEach(([c,d]) => log(`  ${c.padEnd(35)} ${d}`, 'l-sys'));
+}
+
+// ─── SKETCH ARDUINO ──────────────────────────────────────────
+function showSketch() {
+  const sketch = `// timbitoOS v4 — ESP32 Sketch
+// Flashea esto en tu ESP32
+
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid     = "TU_WIFI";
+const char* password = "TU_PASS";
+
+WebServer server(80);
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  while(WiFi.status() != WL_CONNECTED) delay(500);
+  Serial.println("IP: " + WiFi.localIP().toString());
+
+  server.on("/ping", [](){
+    server.send(200, "application/json", "{\\"ok\\":true}");
+  });
+
+  server.on("/cmd", [](){
+    String c = server.arg("c");
+    String resp = handleCmd(c);
+    server.send(200, "application/json", resp);
+  });
+
+  server.begin();
+}
+
+String handleCmd(String cmd) {
+  if(cmd.startsWith("PIN_OUT:")) {
+    int pin = cmd.substring(8).toInt();
+    pinMode(pin, OUTPUT);
+    return "{\\"ok\\":true}";
+  }
+  if(cmd.startsWith("PIN_IN:")) {
+    int pin = cmd.substring(7).toInt();
+    pinMode(pin, INPUT);
+    return "{\\"ok\\":true}";
+  }
+  if(cmd.startsWith("PIN_WRITE:")) {
+    int p1 = cmd.indexOf(':', 10);
+    int pin = cmd.substring(10, p1).toInt();
+    int val = cmd.substring(p1+1).toInt();
+    digitalWrite(pin, val);
+    return "{\\"ok\\":true,\\"pin\\":" + String(pin) + ",\\"val\\":" + String(val) + "}";
+  }
+  if(cmd.startsWith("PIN_READ:")) {
+    int pin = cmd.substring(9).toInt();
+    int val = digitalRead(pin);
+    return "{\\"ok\\":true,\\"val\\":" + String(val) + "}";
+  }
+  if(cmd == "ping") return "{\\"ok\\":true,\\"pong\\":true}";
+  return "{\\"ok\\":false,\\"err\\":\\"unknown\\"}";
+}
+
+void loop() { server.handleClient(); }`;
+
+  S.files['esp32_sketch.ino'] = { content: sketch };
+  openEditor('esp32_sketch.ino');
+  log(`✔ Sketch cargado. Ábrelo con $archivo.abrir(esp32_sketch.ino)`, 'l-ok');
+}
 
 // ─── BOOT ─────────────────────────────────────────────────────
 (async () => {
-  logSys('timbitoOS v4 — iniciando...');
-  await delay(200);
-  logSys('Runtime OK · Parser OK · AST OK');
-  await delay(100);
-  log('✔ Sistema listo. Escribe "help" para ver comandos.', 'line-ok');
-  log('', 'line-sys');
-  logInfo('EJEMPLO RÁPIDO:');
-  logInfo('  variable.crear x');
-  logInfo('  variable.edit x 0');
-  logInfo('  archivo.crear mi_script → archivo.abrir mi_script → [escribe código] → archivo.ejecutar mi_script');
-  log('', 'line-sys');
-  updateSidebar();
-  input.focus();
+  logSys('timbitoOS v4 arrancando...');
+  await wait(150);
+  logSys('Parser ✔  Runtime ✔  ESP32 bridge ✔');
+  await wait(100);
+  log('Sistema listo.', 'l-ok');
+  log('', 'l-sys');
+  logInfo('Escribe $help() para ver todos los comandos.');
+  logInfo('Conecta tu ESP32 con el botón "WiFi ESP32".');
+  log('', 'l-sys');
+  logSys('Ejemplo rápido:');
+  logSys('  $variable.crear(x)');
+  logSys('  $variable.editar(x, 0)');
+  logSys('  $pin.salida(2)');
+  logSys('  $pin.escribir(2, 1)');
+  log('', 'l-sys');
+  updateUI();
+  inp.focus();
 })();
 </script>
 
