@@ -2,135 +2,104 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>PS4 RGB Control</title>
-
+<title>timbitoOS</title>
 <style>
 body {
-    font-family: Arial;
-    text-align: center;
-    background: #0f172a;
-    color: white;
-    padding: 20px;
+    background: black;
+    color: #00ff00;
+    font-family: monospace;
+    padding: 10px;
 }
 
-h1 { color: #22c55e; }
-
-.button-box {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 40px;
+#terminal {
+    height: 90vh;
+    overflow-y: auto;
 }
 
-.button-box div {
-    width: 80px;
-    height: 80px;
-    line-height: 80px;
-    border-radius: 50%;
-    background: #1e293b;
-    font-size: 24px;
-    transition: 0.3s;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-.active {
-    transform: scale(1.3);
-    background: #22c55e;
-    box-shadow: 0 0 25px #22c55e;
-}
-
-#feedback {
-    margin-top: 30px;
-    font-size: 20px;
-    color: #22c55e;
+input {
+    width: 100%;
+    background: black;
+    color: #00ff00;
+    border: none;
+    outline: none;
 }
 </style>
-
 </head>
 <body>
 
-<h1>🎮 Control RGB PRO</h1>
-<p>Presiona botones del control</p>
-
-<div class="button-box">
-    <div id="triangulo">▲</div>
-    <div id="x">✖</div>
-    <div id="cuadrado">■</div>
-    <div id="circulo">●</div>
-</div>
-
-<p id="feedback">Esperando...</p>
+<div id="terminal"></div>
+<input id="input" autofocus placeholder="$">
 
 <script>
-const BASE_URL = "http://192.168.1.7/";
+const terminal = document.getElementById("terminal");
+const input = document.getElementById("input");
 
-let bloqueado = false;
-let botonPresionado = false; // 🔥 clave
-let ultimoComando = "";
+// memoria virtual
+let history = [];
 
-// Activar animación
-function animar(id, texto){
-    let el = document.getElementById(id);
-    el.classList.add("active");
-    document.getElementById("feedback").innerText = texto;
+function print(text) {
+    const line = document.createElement("div");
+    line.textContent = text;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
 
-    setTimeout(() => el.classList.remove("active"), 300);
+    history.push(text);
+    localStorage.setItem("timbito_logs", JSON.stringify(history));
 }
 
-// Enviar comando REAL
-function enviar(cmd, id){
-    if(bloqueado || cmd === ultimoComando) return;
-
-    bloqueado = true;
-    ultimoComando = cmd;
-
-    animar(id, "Comando: " + cmd);
-
-    // 🔥 REDIRECCIÓN (único método que te funciona)
-    window.location.href = BASE_URL + cmd;
+// cargar logs
+const saved = localStorage.getItem("timbito_logs");
+if (saved) {
+    history = JSON.parse(saved);
+    history.forEach(print);
 }
 
-// Gamepad loop
-setInterval(() => {
-    const gp = navigator.getGamepads()[0];
-    if(!gp) return;
+input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+        const cmd = input.value.trim();
+        print("$ " + cmd);
+        input.value = "";
 
-    // Detectar si TODOS están sueltos
-    const ningunoPresionado = !gp.buttons[0].pressed &&
-                              !gp.buttons[1].pressed &&
-                              !gp.buttons[2].pressed &&
-                              !gp.buttons[3].pressed;
+        await ejecutar(cmd);
+    }
+});
 
-    // 🔥 RESETEAR cuando sueltas
-    if(ningunoPresionado){
-        botonPresionado = false;
-        bloqueado = false;
-        ultimoComando = "";
-        return;
+async function ejecutar(cmd) {
+
+    if (cmd === "$crear.pin.salida()") {
+        print("Configurando pin como salida...");
+        await enviarESP("crear_salida");
     }
 
-    // 🔥 EVITAR repetir mientras esté presionado
-    if(botonPresionado) return;
-
-    // Detectar nuevo click
-    if(gp.buttons[3].pressed){
-        enviar("UP","triangulo");
-        botonPresionado = true;
-    }
-    else if(gp.buttons[0].pressed){
-        enviar("DOWN","x");
-        botonPresionado = true;
-    }
-    else if(gp.buttons[2].pressed){
-        enviar("LEFTH","cuadrado");
-        botonPresionado = true;
-    }
-    else if(gp.buttons[1].pressed){
-        enviar("RIGHT","circulo");
-        botonPresionado = true;
+    else if (cmd === "$crear.pin.entrada()") {
+        print("Configurando pin como entrada...");
+        await enviarESP("crear_entrada");
     }
 
-}, 100);
+    else if (cmd === "$leer.pin()") {
+        print("Leyendo pin...");
+        await enviarESP("leer");
+    }
+
+    else if (cmd === "$escribir.pin()") {
+        print("Escribiendo pin...");
+        await enviarESP("escribir");
+    }
+
+    else {
+        print("Comando no reconocido");
+    }
+}
+
+async function enviarESP(accion) {
+    try {
+        const res = await fetch(`http://192.168.4.1/${accion}`);
+        const text = await res.text();
+        print("ESP32: " + text);
+    } catch (err) {
+        print("Error de conexión con ESP32");
+    }
+}
 </script>
 
 </body>
