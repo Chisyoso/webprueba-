@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>timbitoOS v5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div id="logo">TIMBITO<sub>OS v5</sub></div>
+      <div id="esp-status">
+        <div class="esp-dot" id="esp-dot"></div>
+        <span id="esp-label">SIN CONEXIÓN</span>
+        <button id="btn-connect">WiFi ESP32</button>
+      </div>
+    </header>
+
+    <nav id="tabs">
+      <button class="tab active" data-view="terminal-view">⌨ TERMINAL</button>
+      <button class="tab" data-view="vars-view">📦 VARIABLES</button>
+      <button class="tab" data-view="pins-view">🔌 PINES</button>
+      <button class="tab" data-view="loops-view">🔁 LOOPS</button>
+      <button class="tab" data-view="esp-view">⚙ ESP32</button>
+    </nav>
+
+    <main id="views">
+      <section class="view active" id="terminal-view">
+        <div id="output"></div>
+        <div id="input-wrap">
+          <div id="quick-cmds">
+            <button class="qcmd" data-fill="$variable.crear()">$variable.crear</button>
+            <button class="qcmd" data-fill="$variable.editar()">$variable.editar</button>
+            <button class="qcmd" data-fill="$variable.leer()">$variable.leer</button>
+            <button class="qcmd" data-fill="$pin.salida()">$pin.salida</button>
+            <button class="qcmd" data-fill="$pin.escribir(,)">$pin.escribir</button>
+            <button class="qcmd" data-fill="$loop.crear()">$loop.crear</button>
+            <button class="qcmd" data-fill="$loop.init()">$loop.init</button>
+            <button class="qcmd" data-fill="$loop.stop()">$loop.stop</button>
+            <button class="qcmd" data-fill="$delay(500)">$delay</button>
+            <button class="qcmd" data-fill="$print()">$print</button>
+          </div>
+          <div id="input-row">
+            <span id="prompt">❯</span>
+            <input id="cmd-input" placeholder="$comando(args)..." autocomplete="off" spellcheck="false" autocapitalize="none" />
+            <button id="btn-send">↑</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="vars-view">
+        <div class="view-header">VARIABLES <span id="var-count-lbl">0</span></div>
+        <div class="list-wrap" id="var-list-ui">
+          <div class="empty-state"><div class="empty-icon">📦</div><div>Sin variables</div></div>
+        </div>
+      </section>
+
+      <section class="view" id="pins-view">
+        <div class="view-header">PINES <span id="pin-count-lbl">0</span></div>
+        <div class="pin-grid" id="pin-grid-ui">
+          <div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔌</div><div>Sin pines</div></div>
+        </div>
+      </section>
+
+      <section class="view" id="loops-view">
+        <div class="view-header">
+          <span>LOOPS</span>
+          <button class="create-btn" id="btn-add-loop">＋ Añadir loop</button>
+        </div>
+        <div class="loop-list-wrap" id="loop-list-ui">
+          <div class="empty-state"><div class="empty-icon">🔁</div><div>Sin loops. Crea uno con el botón de arriba</div></div>
+        </div>
+      </section>
+
+      <section class="view" id="esp-view">
+        <div class="esp-config-wrap">
+          <div class="esp-status-card">
+            <div class="esp-card-title">ESTADO DE CONEXIÓN</div>
+            <div class="esp-stat-row"><span class="esp-stat-key">Dirección</span><span class="esp-stat-val" id="stat-ip">—</span></div>
+            <div class="esp-stat-row"><span class="esp-stat-key">Puerto</span><span class="esp-stat-val" id="stat-port">80</span></div>
+            <div class="esp-stat-row"><span class="esp-stat-key">Estado</span><span class="esp-stat-val err" id="stat-status">Desconectado</span></div>
+            <div class="esp-stat-row"><span class="esp-stat-key">Latencia</span><span class="esp-stat-val" id="stat-ping">—</span></div>
+            <div class="esp-stat-row"><span class="esp-stat-key">Comandos</span><span class="esp-stat-val" id="stat-cmds">0</span></div>
+          </div>
+
+          <div class="esp-card">
+            <div class="esp-card-title">DIRECCIONES GUARDADAS</div>
+            <div class="esp-field">
+              <div class="esp-label">Seleccionar preset</div>
+              <select class="esp-input" id="esp-presets"></select>
+            </div>
+            <div class="esp-btn-row">
+              <button class="esp-action-btn" id="btn-use-preset">USAR</button>
+              <button class="esp-action-btn" id="btn-save-preset">GUARDAR</button>
+              <button class="esp-action-btn danger" id="btn-del-preset">BORRAR</button>
+            </div>
+          </div>
+
+          <div class="esp-card">
+            <div class="esp-card-title">CONFIGURACIÓN MANUAL</div>
+            <div class="esp-field">
+              <div class="esp-label">Host / IP del ESP</div>
+              <input class="esp-input" id="esp-host-input" placeholder="192.168.1.100" type="text" inputmode="url">
+            </div>
+            <div class="esp-field">
+              <div class="esp-label">Puerto HTTP</div>
+              <input class="esp-input" id="esp-port-input" placeholder="80" type="number" inputmode="numeric" value="80">
+            </div>
+            <button class="esp-action-btn" id="btn-connect-manual">🔗 CONECTAR</button>
+            <button class="esp-action-btn danger" id="btn-disconnect">✕ DESCONECTAR</button>
+          </div>
+
+          <div class="esp-card">
+            <div class="esp-card-title">SKETCH ESP8266</div>
+            <div style="font-size:10px;color:var(--dim);line-height:1.7">
+              Usa <span style="color:var(--acc4)">/ping</span> y <span style="color:var(--acc4)">/cmd?c=...</span>.<br>
+              Compatible con <span style="color:var(--acc4)">ESP8266WiFi.h</span> y CORS.
+            </div>
+            <button class="esp-action-btn" id="btn-show-sketch" style="margin-top:10px">📋 VER SKETCH</button>
+          </div>
+
+          <div class="esp-card">
+            <div class="esp-card-title">OPCIONES SI NO CONECTA</div>
+            <div style="font-size:10px;color:var(--dim);line-height:1.7">
+              Si la página está en GitHub Pages, el navegador puede bloquear <b>http://IP</b> por seguridad.
+              Prueba abrir la página en local, servirla por HTTP en tu red, o usar un proxy en tu PC.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="editor-overlay">
+    <div id="editor-topbar">
+      <div id="editor-fname">📄 sin_archivo</div>
+      <div id="editor-btns">
+        <button class="ed-btn run-ed" id="editor-run">▶ RUN</button>
+        <button class="ed-btn save" id="editor-save">💾</button>
+        <button class="ed-btn" id="editor-close">✕</button>
+      </div>
+    </div>
+    <textarea id="editor-area" placeholder="Escribe tu script aquí..."></textarea>
+    <div id="editor-bar">Ctrl+S guardar · Toca fuera para cerrar</div>
+  </div>
+
+  <div id="debug-overlay">
+    <div id="debug-topbar">
+      <div id="debug-title">⬡ DEBUGGER</div>
+      <div id="debug-close">✕</div>
+    </div>
+    <div id="debug-content"><span style="color:var(--dim)">Sin datos. Activa con $debug.on()</span></div>
+  </div>
+
+  <div id="connect-modal">
+    <div id="connect-box">
+      <div id="connect-title">⚡ CONECTAR ESP</div>
+      <div class="conn-field">
+        <div class="conn-label">Preset</div>
+        <select class="conn-input" id="modal-preset"></select>
+      </div>
+      <div class="conn-field">
+        <div class="conn-label">Host / IP</div>
+        <input class="conn-input" id="modal-host" placeholder="192.168.1.100" type="text" inputmode="url">
+      </div>
+      <div class="conn-field">
+        <div class="conn-label">Puerto</div>
+        <input class="conn-input" id="modal-port" placeholder="80" type="number" inputmode="numeric" value="80">
+      </div>
+      <div class="conn-btns">
+        <button class="conn-btn" id="modal-cancel">CANCELAR</button>
+        <button class="conn-btn primary" id="modal-connect">CONECTAR</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
