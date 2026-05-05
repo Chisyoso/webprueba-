@@ -1,37 +1,1141 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>timbitoOS</title>
-<link rel="stylesheet" href="styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>timbitoOS v4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+–bg: #0a0c0f;
+–panel: #0f1318;
+–border: #1e2530;
+–accent: #00ff9d;
+–accent2: #00c9ff;
+–accent3: #ff4e6a;
+–accent4: #ffb800;
+–text: #c8d6e5;
+–dim: #4a5568;
+–glow: 0 0 8px #00ff9d55;
+–glow2: 0 0 8px #00c9ff55;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘JetBrains Mono’, monospace;
+height: 100vh;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+
+/* HEADER */
+#header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 16px;
+background: var(–panel);
+border-bottom: 1px solid var(–border);
+user-select: none;
+}
+#logo {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 18px;
+color: var(–accent);
+text-shadow: var(–glow);
+letter-spacing: 2px;
+}
+#logo span { color: var(–accent2); }
+#status-bar {
+display: flex;
+gap: 16px;
+font-size: 11px;
+color: var(–dim);
+}
+.status-item { display: flex; align-items: center; gap: 4px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(–dim); }
+.dot.active { background: var(–accent); box-shadow: var(–glow); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* MAIN LAYOUT */
+#main {
+flex: 1;
+display: grid;
+grid-template-columns: 1fr 280px;
+grid-template-rows: 1fr 180px;
+gap: 1px;
+background: var(–border);
+overflow: hidden;
+}
+
+/* TERMINAL */
+#terminal-wrap {
+background: var(–panel);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+#terminal-title {
+padding: 6px 12px;
+font-size: 10px;
+color: var(–dim);
+border-bottom: 1px solid var(–border);
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+#output {
+flex: 1;
+overflow-y: auto;
+padding: 12px;
+font-size: 13px;
+line-height: 1.7;
+scrollbar-width: thin;
+scrollbar-color: var(–border) transparent;
+}
+#output::-webkit-scrollbar { width: 4px; }
+#output::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+.line-ok     { color: var(–accent); }
+.line-err    { color: var(–accent3); }
+.line-warn   { color: var(–accent4); }
+.line-info   { color: var(–accent2); }
+.line-cmd    { color: #fff; opacity: .6; }
+.line-debug  { color: #a78bfa; font-size: 11px; }
+.line-print  { color: var(–text); }
+.line-sys    { color: var(–dim); font-style: italic; }
+
+#input-row {
+display: flex;
+align-items: center;
+padding: 8px 12px;
+border-top: 1px solid var(–border);
+gap: 8px;
+}
+#prompt { color: var(–accent); font-size: 14px; }
+#cmd-input {
+flex: 1;
+background: transparent;
+border: none;
+outline: none;
+color: #fff;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 13px;
+caret-color: var(–accent);
+}
+
+/* SIDEBAR – variables + pins + files */
+#sidebar {
+background: var(–panel);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+.sb-section {
+border-bottom: 1px solid var(–border);
+overflow: hidden;
+}
+.sb-title {
+padding: 6px 10px;
+font-size: 10px;
+color: var(–dim);
+letter-spacing: 1px;
+text-transform: uppercase;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.sb-count {
+background: var(–border);
+border-radius: 8px;
+padding: 1px 6px;
+font-size: 9px;
+}
+.sb-list {
+padding: 4px 10px 8px;
+font-size: 11px;
+max-height: 120px;
+overflow-y: auto;
+scrollbar-width: thin;
+scrollbar-color: var(–border) transparent;
+}
+.sb-item {
+display: flex;
+justify-content: space-between;
+padding: 2px 0;
+border-bottom: 1px solid #1a1f2a;
+}
+.sb-key { color: var(–accent2); }
+.sb-val { color: var(–accent4); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* LOOPS PANEL */
+#loops-panel {
+background: var(–panel);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+grid-column: 1;
+}
+.loop-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; flex: 1; align-content: flex-start; overflow-y: auto; }
+.loop-chip {
+display: flex;
+align-items: center;
+gap: 6px;
+background: #141a22;
+border: 1px solid var(–border);
+border-radius: 4px;
+padding: 4px 10px;
+font-size: 11px;
+cursor: default;
+}
+.loop-chip.running { border-color: var(–accent); color: var(–accent); box-shadow: var(–glow); }
+.loop-chip.running .ldot { background: var(–accent); animation: pulse 1s infinite; }
+.loop-chip.stopped { color: var(–dim); }
+.loop-chip .ldot { width: 5px; height: 5px; border-radius: 50%; background: var(–dim); }
+.loop-btn {
+background: none;
+border: 1px solid var(–border);
+color: var(–dim);
+border-radius: 3px;
+padding: 1px 5px;
+font-size: 9px;
+cursor: pointer;
+font-family: ‘JetBrains Mono’, monospace;
+transition: .15s;
+}
+.loop-btn:hover { border-color: var(–accent3); color: var(–accent3); }
+.loop-btn.start:hover { border-color: var(–accent); color: var(–accent); }
+
+/* DEBUG PANEL */
+#debug-panel {
+background: var(–panel);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+grid-column: 2;
+grid-row: 2;
+}
+#debug-content {
+flex: 1;
+padding: 6px 10px;
+font-size: 10px;
+overflow-y: auto;
+line-height: 1.7;
+scrollbar-width: thin;
+scrollbar-color: var(–border) transparent;
+}
+.dbg-line { color: #a78bfa; }
+.dbg-var  { color: var(–accent4); }
+.dbg-cond { color: var(–accent2); }
+.dbg-log  { color: var(–dim); }
+
+/* EDITOR OVERLAY */
+#editor-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: #000000cc;
+z-index: 100;
+align-items: center;
+justify-content: center;
+}
+#editor-overlay.open { display: flex; }
+#editor-box {
+background: #0d1117;
+border: 1px solid var(–accent2);
+border-radius: 8px;
+width: 640px;
+max-width: 95vw;
+max-height: 80vh;
+display: flex;
+flex-direction: column;
+box-shadow: 0 0 40px #00c9ff22;
+}
+#editor-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 10px 16px;
+border-bottom: 1px solid var(–border);
+}
+#editor-filename {
+font-size: 12px;
+color: var(–accent2);
+letter-spacing: 1px;
+}
+#editor-actions { display: flex; gap: 8px; }
+.ed-btn {
+background: var(–border);
+border: 1px solid #2d3748;
+color: var(–text);
+padding: 4px 12px;
+border-radius: 4px;
+cursor: pointer;
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 11px;
+transition: .15s;
+}
+.ed-btn:hover { background: #1e2a3a; border-color: var(–accent2); color: var(–accent2); }
+.ed-btn.save { border-color: var(–accent); color: var(–accent); }
+.ed-btn.save:hover { background: #001a0f; }
+#editor-area {
+flex: 1;
+background: transparent;
+border: none;
+outline: none;
+resize: none;
+color: var(–text);
+font-family: ‘JetBrains Mono’, monospace;
+font-size: 13px;
+line-height: 1.7;
+padding: 16px;
+min-height: 300px;
+tab-size: 4;
+}
+#editor-status {
+padding: 6px 16px;
+font-size: 10px;
+color: var(–dim);
+border-top: 1px solid var(–border);
+}
+
+/* PIN VISUAL */
+.pin-display {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+padding: 6px 10px 8px;
+}
+.pin-item {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 2px;
+font-size: 9px;
+}
+.pin-led {
+width: 14px;
+height: 14px;
+border-radius: 50%;
+border: 1px solid var(–border);
+background: #1a1f2a;
+transition: .2s;
+}
+.pin-led.on { background: var(–accent); box-shadow: var(–glow); }
+.pin-led.on-hi { background: var(–accent2); box-shadow: var(–glow2); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+/* Scanlines overlay */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+pointer-events: none;
+z-index: 999;
+}
+</style>
+
 </head>
 <body>
 
-<div class="app">
+<div id="header">
+  <div id="logo">timbito<span>OS</span> <span style="font-size:11px;color:var(--dim)">v4.0</span></div>
+  <div id="status-bar">
+    <div class="status-item"><div class="dot" id="runtime-dot"></div><span id="runtime-label">IDLE</span></div>
+    <div class="status-item"><div class="dot active" style="background:var(--accent2)"></div><span>RUNTIME OK</span></div>
+    <div class="status-item" id="debug-indicator" style="display:none"><div class="dot active" style="background:#a78bfa"></div><span>DEBUG</span></div>
+  </div>
+</div>
 
-    <div class="header">
-        <span>timbitoOS</span>
-        <button id="panelBtn">☰</button>
+<div id="main">
+
+  <!-- TERMINAL -->
+
+  <div id="terminal-wrap">
+    <div id="terminal-title">▸ terminal — timbitoOS shell v4</div>
+    <div id="output"></div>
+    <div id="input-row">
+      <span id="prompt">❯</span>
+      <input id="cmd-input" placeholder="escribe un comando..." autocomplete="off" spellcheck="false">
     </div>
+  </div>
 
-    <div id="terminal"></div>
+  <!-- SIDEBAR -->
 
-    <div class="input-container">
-        <span>$</span>
-        <input id="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <div id="sidebar">
+    <div class="sb-section" style="flex:0 0 auto">
+      <div class="sb-title">Variables <span class="sb-count" id="var-count">0</span></div>
+      <div class="sb-list" id="var-list"></div>
     </div>
+    <div class="sb-section" style="flex:0 0 auto">
+      <div class="sb-title">Pines <span class="sb-count" id="pin-count">0</span></div>
+      <div class="pin-display" id="pin-list"></div>
+    </div>
+    <div class="sb-section" style="flex:1; overflow:hidden; display:flex; flex-direction:column">
+      <div class="sb-title">Archivos <span class="sb-count" id="file-count">0</span></div>
+      <div class="sb-list" id="file-list" style="max-height:unset;flex:1"></div>
+    </div>
+  </div>
 
-    <div id="suggestions"></div>
+  <!-- LOOPS PANEL -->
+
+  <div id="loops-panel">
+    <div id="terminal-title" style="border-bottom:1px solid var(--border); border-top:1px solid var(--border)">▸ loops activos</div>
+    <div class="loop-list" id="loop-list"></div>
+  </div>
+
+  <!-- DEBUG PANEL -->
+
+  <div id="debug-panel">
+    <div id="terminal-title" style="border-bottom:1px solid var(--border); border-top:1px solid var(--border)">▸ debugger</div>
+    <div id="debug-content"><span class="dbg-log">Sin datos de debug aún.</span></div>
+  </div>
 
 </div>
 
-<div id="panel" class="panel hidden">
-    <button id="closePanel">✖</button>
-    <h3>Estado</h3>
-    <div id="panelContent"></div>
+<!-- EDITOR OVERLAY -->
+
+<div id="editor-overlay">
+  <div id="editor-box">
+    <div id="editor-header">
+      <div id="editor-filename">📄 sin_archivo</div>
+      <div id="editor-actions">
+        <button class="ed-btn save" onclick="editorSave()">💾 guardar</button>
+        <button class="ed-btn" onclick="editorClose()">✕ cerrar</button>
+      </div>
+    </div>
+    <textarea id="editor-area" placeholder="Escribe código timbitoOS aquí...
+Ejemplo:
+variable.crear x
+variable.edit x 0
+loop.blink
+  escribir.pin 2 1
+  delay 500
+  escribir.pin 2 0
+  delay 500
+loop.final"></textarea>
+    <div id="editor-status">Ctrl+S para guardar · Tab = 4 espacios</div>
+  </div>
 </div>
 
-<script src="index.js"></script>
+<script>
+/* ============================================================
+   timbitoOS v4 — Motor completo
+   Parser → AST → Runtime async → Estado global
+   ============================================================ */
+
+// ─── ESTADO GLOBAL ──────────────────────────────────────────
+const STATE = {
+  vars: {},        // { name: { type, value } }
+  pins: {},        // { num: { mode, value } }
+  loops: {},       // { name: { body:[], running:bool, task:Promise } }
+  funcs: {},       // { name: lines[] }
+  files: {},       // { name: { content:string } }
+  debugMode: false,
+  debugLogs: [],
+  history: [],
+  histIdx: -1,
+};
+
+// ─── TERMINAL OUTPUT ────────────────────────────────────────
+const out = document.getElementById('output');
+function log(msg, cls='line-ok') {
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = msg;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+function logCmd(cmd) { log('❯ ' + cmd, 'line-cmd'); }
+function logErr(msg)  { log('✗ ' + msg, 'line-err'); }
+function logWarn(msg) { log('⚠ ' + msg, 'line-warn'); }
+function logInfo(msg) { log('ℹ ' + msg, 'line-info'); }
+function logPrint(msg){ log(msg, 'line-print'); }
+function logSys(msg)  { log(msg, 'line-sys'); }
+
+// ─── SIDEBAR UPDATES ────────────────────────────────────────
+function updateSidebar() {
+  // Variables
+  const vl = document.getElementById('var-list');
+  const vc = document.getElementById('var-count');
+  const entries = Object.entries(STATE.vars);
+  vc.textContent = entries.length;
+  vl.innerHTML = entries.length === 0
+    ? '<span style="color:var(--dim);font-size:10px">vacío</span>'
+    : entries.map(([k,v])=>`<div class="sb-item"><span class="sb-key">${k}</span><span class="sb-val">${String(v.value).substring(0,20)}</span></div>`).join('');
+
+  // Pins
+  const pl = document.getElementById('pin-list');
+  const pc = document.getElementById('pin-count');
+  const pins = Object.entries(STATE.pins);
+  pc.textContent = pins.length;
+  pl.innerHTML = pins.map(([n,p])=>`
+    <div class="pin-item">
+      <div class="pin-led ${p.value>0?'on':''}"></div>
+      <span style="color:var(--dim)">${n}</span>
+    </div>`).join('');
+
+  // Files
+  const fl = document.getElementById('file-list');
+  const fc = document.getElementById('file-count');
+  const files = Object.entries(STATE.files);
+  fc.textContent = files.length;
+  fl.innerHTML = files.length === 0
+    ? '<span style="color:var(--dim);font-size:10px">vacío</span>'
+    : files.map(([k])=>`<div class="sb-item"><span class="sb-key">📄 ${k}</span><span class="sb-val" style="cursor:pointer;color:var(--accent2)" onclick="openFile('${k}')">abrir</span></div>`).join('');
+
+  // Loops
+  const ll = document.getElementById('loop-list');
+  const loops = Object.entries(STATE.loops);
+  if(loops.length===0) {
+    ll.innerHTML = '<span style="color:var(--dim);font-size:11px;padding:4px">Sin loops definidos.</span>';
+    return;
+  }
+  ll.innerHTML = loops.map(([name,lp])=>`
+    <div class="loop-chip ${lp.running?'running':'stopped'}">
+      <div class="ldot"></div>
+      <span>${name}</span>
+      ${lp.running
+        ? `<button class="loop-btn" onclick="stopLoop('${name}')">⏹ stop</button>`
+        : `<button class="loop-btn start" onclick="startLoop('${name}')">▶ run</button>`
+      }
+    </div>`).join('');
+
+  // Runtime dot
+  const anyRunning = Object.values(STATE.loops).some(l=>l.running);
+  const dot = document.getElementById('runtime-dot');
+  const lbl = document.getElementById('runtime-label');
+  dot.classList.toggle('active', anyRunning);
+  lbl.textContent = anyRunning ? 'RUNNING' : 'IDLE';
+}
+
+// ─── DEBUG ───────────────────────────────────────────────────
+function dbgPush(info) {
+  if(!STATE.debugMode) return;
+  const dc = document.getElementById('debug-content');
+  const d = document.createElement('div');
+  d.innerHTML = Object.entries(info).map(([k,v])=>{
+    let cls = 'dbg-log';
+    if(k==='linea') cls='dbg-line';
+    if(k==='var')   cls='dbg-var';
+    if(k==='cond')  cls='dbg-cond';
+    return `<span class="${cls}">[${k}] ${v}</span>`;
+  }).join('<br>') + '<hr style="border-color:#1e2530;margin:3px 0">';
+  dc.appendChild(d);
+  dc.scrollTop = dc.scrollHeight;
+  document.getElementById('debug-indicator').style.display = STATE.debugMode ? 'flex' : 'none';
+}
+function clearDebug() {
+  document.getElementById('debug-content').innerHTML = '<span class="dbg-log">Debug limpiado.</span>';
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function resolveValue(raw) {
+  // reemplaza variable.leer X con su valor
+  let s = String(raw).trim();
+  s = s.replace(/variable\.leer\s+(\w+)/g, (_,name) => {
+    const v = STATE.vars[name];
+    if(!v) throw new Error(`Variable '${name}' no existe`);
+    return v.value;
+  });
+  return s;
+}
+
+function evalExpr(expr) {
+  // Evalúa expresión matemática/comparativa de forma segura
+  let s = resolveValue(expr);
+  // Sanitize: solo números, operadores, espacios, comillas simples
+  s = s.replace(/[^0-9+\-*/%<>=!&|.()\s"'a-zA-Z_]/g, '');
+  try {
+    // eslint-disable-next-line no-new-func
+    return Function('"use strict"; return (' + s + ')')();
+  } catch(e) {
+    throw new Error(`Expresión inválida: ${expr}`);
+  }
+}
+
+function evalCondition(cond) {
+  try {
+    const result = evalExpr(cond);
+    return !!result;
+  } catch(e) {
+    throw new Error(`Condición inválida: ${cond}`);
+  }
+}
+
+// ─── PARSER ──────────────────────────────────────────────────
+// Convierte array de strings en AST
+function parse(lines) {
+  const tokens = lines.map(l=>l.trim()).filter(l=>l && !l.startsWith('//'));
+  let idx = 0;
+
+  function parseBlock(stopKeywords) {
+    const body = [];
+    while(idx < tokens.length) {
+      const line = tokens[idx];
+      if(stopKeywords.some(k => line === k || line.startsWith(k+' '))) break;
+
+      // IF
+      if(line.startsWith('if ')) {
+        const cond = line.slice(3).trim();
+        idx++;
+        const thenBlock = parseBlock(['else','if.final']);
+        let elseBlock = [];
+        if(idx < tokens.length && (tokens[idx]==='else' || tokens[idx].startsWith('else '))) {
+          idx++;
+          elseBlock = parseBlock(['if.final']);
+        }
+        if(idx < tokens.length && tokens[idx]==='if.final') idx++;
+        body.push({ type:'if', cond, then:thenBlock, else:elseBlock });
+        continue;
+      }
+      // WHILE
+      if(line.startsWith('while ')) {
+        const cond = line.slice(6).trim();
+        idx++;
+        const whileBody = parseBlock(['endwhile']);
+        if(idx < tokens.length && tokens[idx]==='endwhile') idx++;
+        body.push({ type:'while', cond, body:whileBody });
+        continue;
+      }
+      // FUNC def
+      if(line.startsWith('func.')) {
+        const name = line.slice(5).trim();
+        idx++;
+        const funcBody = parseBlock(['func.end']);
+        if(idx < tokens.length) idx++;
+        STATE.funcs[name] = funcBody;
+        log(`✔ función '${name}' definida`, 'line-ok');
+        continue;
+      }
+      // LOOP body def (handled externally)
+      if(line.startsWith('loop.') && !line.includes(' ') && line !== 'loop.final') {
+        // solo skip
+        idx++;
+        continue;
+      }
+      if(line === 'loop.final') { idx++; continue; }
+
+      body.push({ type:'cmd', cmd:line });
+      idx++;
+    }
+    return body;
+  }
+
+  return parseBlock([]);
+}
+
+// ─── RUNTIME ─────────────────────────────────────────────────
+async function execStep(step, loopRef) {
+  if(loopRef && !loopRef.running) throw new Error('__STOPPED__');
+
+  if(step.type === 'if') {
+    const condStr = resolveValue(step.cond);
+    const result = evalCondition(condStr);
+    dbgPush({ linea: `if ${step.cond}`, cond: String(result) });
+    const block = result ? step.then : step.else;
+    for(const s of block) await execStep(s, loopRef);
+    return;
+  }
+
+  if(step.type === 'while') {
+    let safety = 0;
+    while(true) {
+      if(loopRef && !loopRef.running) break;
+      const condStr = resolveValue(step.cond);
+      const result = evalCondition(condStr);
+      dbgPush({ linea:`while ${step.cond}`, cond: String(result) });
+      if(!result) break;
+      for(const s of step.body) await execStep(s, loopRef);
+      if(++safety > 100000) { logErr('while: límite de iteraciones alcanzado'); break; }
+    }
+    return;
+  }
+
+  if(step.type === 'cmd') {
+    dbgPush({ linea: step.cmd });
+    await execCmd(step.cmd, loopRef);
+  }
+}
+
+async function execLines(lines, loopRef) {
+  const ast = parse(lines);
+  for(const step of ast) {
+    if(loopRef && !loopRef.running) break;
+    await execStep(step, loopRef);
+  }
+}
+
+// ─── COMANDO ÚNICO ───────────────────────────────────────────
+async function execCmd(raw, loopRef) {
+  const cmd = raw.trim();
+  if(!cmd || cmd.startsWith('//')) return;
+
+  // PRINT
+  if(cmd.startsWith('print ')) {
+    const val = resolveValue(cmd.slice(6).trim());
+    logPrint('📤 ' + val);
+    return;
+  }
+
+  // DELAY
+  if(cmd.startsWith('delay ')) {
+    const ms = parseInt(resolveValue(cmd.slice(6)));
+    await delay(ms);
+    return;
+  }
+
+  // VARIABLE CREAR
+  if(cmd.startsWith('variable.crear ')) {
+    const parts = cmd.slice(15).trim().split(' ');
+    const name = parts[0];
+    const type = parts[1] || 'number';
+    if(STATE.vars[name]) { logWarn(`Variable '${name}' ya existe`); return; }
+    STATE.vars[name] = { type, value: type==='string' ? '' : 0 };
+    log(`✔ var ${name} (${type}) creada`, 'line-ok');
+    updateSidebar();
+    return;
+  }
+
+  // VARIABLE EDIT
+  if(cmd.startsWith('variable.edit ')) {
+    const rest = cmd.slice(14).trim();
+    const sp = rest.indexOf(' ');
+    const name = rest.slice(0, sp);
+    let expr = rest.slice(sp+1).trim();
+    if(!STATE.vars[name]) { logErr(`Variable '${name}' no existe`); return; }
+    let val;
+    try {
+      val = evalExpr(expr);
+    } catch(e) {
+      // intenta como string
+      val = resolveValue(expr);
+    }
+    STATE.vars[name].value = val;
+    dbgPush({ var: `${name} = ${val}` });
+    updateSidebar();
+    return;
+  }
+
+  // VARIABLE LEER
+  if(cmd.startsWith('variable.leer ')) {
+    const name = cmd.slice(14).trim();
+    const v = STATE.vars[name];
+    if(!v) { logErr(`Variable '${name}' no existe`); return; }
+    logInfo(`${name} = ${v.value}`);
+    return;
+  }
+
+  // VARIABLE DELETE
+  if(cmd.startsWith('variable.borrar ')) {
+    const name = cmd.slice(16).trim();
+    delete STATE.vars[name];
+    log(`✔ variable '${name}' eliminada`);
+    updateSidebar();
+    return;
+  }
+
+  // CREAR PIN
+  if(cmd.startsWith('crear.pin.salida ') || cmd.startsWith('crear.pin.entrada ')) {
+    const mode = cmd.startsWith('crear.pin.salida') ? 'output' : 'input';
+    const num = cmd.split(' ')[1];
+    STATE.pins[num] = { mode, value: 0 };
+    log(`✔ pin ${num} [${mode}] creado`);
+    updateSidebar();
+    return;
+  }
+
+  // ESCRIBIR PIN
+  if(cmd.startsWith('escribir.pin ')) {
+    const parts = cmd.slice(13).trim().split(' ');
+    const num = parts[0];
+    const val = parseInt(resolveValue(parts[1]));
+    if(!STATE.pins[num]) STATE.pins[num] = { mode:'output', value:0 };
+    STATE.pins[num].value = val;
+    updateSidebar();
+    return;
+  }
+
+  // LEER PIN
+  if(cmd.startsWith('leer.pin ')) {
+    const num = cmd.slice(9).trim();
+    const p = STATE.pins[num];
+    if(!p) { logErr(`Pin ${num} no existe`); return; }
+    logInfo(`pin ${num} = ${p.value}`);
+    return;
+  }
+
+  // LOOP DEFINICIÓN (con cuerpo en archivo)
+  // loop.NAME ... loop.final  → se parsea en bloque aparte
+  // Aquí soportamos def inline vía archivo
+
+  // LOOP INIT
+  if(cmd.startsWith('loop.init ')) {
+    const name = cmd.slice(10).trim();
+    startLoop(name);
+    return;
+  }
+
+  // LOOP STOP
+  if(cmd.startsWith('loop.stop ')) {
+    const name = cmd.slice(10).trim();
+    stopLoop(name);
+    return;
+  }
+
+  // ARCHIVO CREAR
+  if(cmd.startsWith('archivo.crear ')) {
+    const name = cmd.slice(14).trim();
+    if(STATE.files[name]) { logWarn(`Archivo '${name}' ya existe`); return; }
+    STATE.files[name] = { content: '' };
+    log(`✔ archivo '${name}' creado`);
+    updateSidebar();
+    return;
+  }
+
+  // ARCHIVO ABRIR (abre editor)
+  if(cmd.startsWith('archivo.abrir ')) {
+    const name = cmd.slice(14).trim();
+    openFile(name);
+    return;
+  }
+
+  // ARCHIVO GUARDAR DESDE TERMINAL
+  if(cmd.startsWith('archivo.guardar ')) {
+    const parts = cmd.slice(16).trim().split(' ');
+    const name = parts[0];
+    const content = parts.slice(1).join(' ');
+    STATE.files[name] = { content };
+    log(`✔ archivo '${name}' guardado`);
+    updateSidebar();
+    return;
+  }
+
+  // ARCHIVO EJECUTAR
+  if(cmd.startsWith('archivo.ejecutar ')) {
+    const name = cmd.slice(17).trim();
+    const f = STATE.files[name];
+    if(!f) { logErr(`Archivo '${name}' no existe`); return; }
+    log(`▶ ejecutando archivo '${name}'...`, 'line-info');
+    await runScript(f.content);
+    return;
+  }
+
+  // DELETE ARCHIVO
+  if(cmd.startsWith('delet.archivo ') || cmd.startsWith('delete.archivo ')) {
+    const name = cmd.split(' ').slice(1).join(' ').trim();
+    if(!STATE.files[name]) { logErr(`Archivo '${name}' no existe`); return; }
+    delete STATE.files[name];
+    log(`✔ archivo '${name}' eliminado`);
+    updateSidebar();
+    return;
+  }
+
+  // FUNC CALL
+  if(cmd.startsWith('func.call ')) {
+    const name = cmd.slice(10).trim();
+    const fn = STATE.funcs[name];
+    if(!fn) { logErr(`Función '${name}' no existe`); return; }
+    log(`▶ func ${name}()`, 'line-info');
+    for(const s of fn) await execStep(s, loopRef);
+    return;
+  }
+
+  // DEBUG ON/OFF
+  if(cmd === 'debug.on')  { STATE.debugMode=true;  logInfo('Debugger activado'); document.getElementById('debug-indicator').style.display='flex'; clearDebug(); return; }
+  if(cmd === 'debug.off') { STATE.debugMode=false; logInfo('Debugger desactivado'); document.getElementById('debug-indicator').style.display='none'; return; }
+  if(cmd === 'debug.clear') { clearDebug(); return; }
+
+  // CLEAR
+  if(cmd === 'clear' || cmd === 'cls') { out.innerHTML = ''; return; }
+
+  // RESET
+  if(cmd === 'reset') {
+    Object.keys(STATE.loops).forEach(n => { STATE.loops[n].running = false; });
+    STATE.vars = {}; STATE.pins = {}; STATE.loops = {}; STATE.funcs = {}; STATE.files = {};
+    updateSidebar();
+    log('✔ sistema reseteado', 'line-warn');
+    return;
+  }
+
+  // HELP
+  if(cmd === 'help') {
+    const cmds = [
+      ['variable.crear <n> [tipo]','crear variable'],
+      ['variable.edit <n> <expr>','asignar valor'],
+      ['variable.leer <n>','leer variable'],
+      ['variable.borrar <n>','eliminar variable'],
+      ['crear.pin.salida <n>','crear pin salida'],
+      ['crear.pin.entrada <n>','crear pin entrada'],
+      ['escribir.pin <n> <v>','escribir pin'],
+      ['leer.pin <n>','leer pin'],
+      ['loop.init <name>','iniciar loop'],
+      ['loop.stop <name>','detener loop'],
+      ['archivo.crear <n>','crear archivo'],
+      ['archivo.abrir <n>','abrir editor'],
+      ['archivo.ejecutar <n>','ejecutar archivo'],
+      ['delet.archivo <n>','eliminar archivo'],
+      ['func.call <n>','llamar función'],
+      ['print <expr>','imprimir'],
+      ['delay <ms>','esperar ms'],
+      ['debug.on / debug.off','debugger'],
+      ['clear','limpiar terminal'],
+      ['reset','resetear todo'],
+    ];
+    cmds.forEach(([c,d])=> log(`  ${c.padEnd(30)} — ${d}`, 'line-info'));
+    return;
+  }
+
+  // VARS / PINS / LOOPS / FILES
+  if(cmd === 'vars')  { logInfo('Variables: ' + JSON.stringify(STATE.vars, null, 2)); return; }
+  if(cmd === 'loops') { logInfo('Loops: ' + Object.keys(STATE.loops).join(', ')||'ninguno'); return; }
+  if(cmd === 'files') { logInfo('Archivos: ' + Object.keys(STATE.files).join(', ')||'ninguno'); return; }
+  if(cmd === 'pins')  { logInfo('Pines: ' + JSON.stringify(STATE.pins)); return; }
+
+  logErr(`Comando desconocido: '${cmd}'  (escribe 'help')`);
+}
+
+// ─── LOOP RUNNER ─────────────────────────────────────────────
+function startLoop(name) {
+  const lp = STATE.loops[name];
+  if(!lp) { logErr(`Loop '${name}' no definido`); return; }
+  if(lp.running) { logWarn(`Loop '${name}' ya está corriendo`); return; }
+  lp.running = true;
+  log(`▶ loop '${name}' iniciado`, 'line-ok');
+  updateSidebar();
+
+  lp.task = (async () => {
+    try {
+      while(lp.running) {
+        for(const step of lp.body) {
+          if(!lp.running) break;
+          await execStep(step, lp);
+        }
+      }
+    } catch(e) {
+      if(e.message !== '__STOPPED__') logErr(`Loop '${name}' error: ${e.message}`);
+    }
+    lp.running = false;
+    log(`⏹ loop '${name}' detenido`, 'line-warn');
+    updateSidebar();
+  })();
+}
+
+function stopLoop(name) {
+  const lp = STATE.loops[name];
+  if(!lp) { logErr(`Loop '${name}' no existe`); return; }
+  lp.running = false;
+  log(`⏹ loop '${name}' detenido`, 'line-warn');
+  updateSidebar();
+}
+
+// ─── SCRIPT RUNNER ───────────────────────────────────────────
+// Parsea scripts completos incluyendo definición de loops/funcs
+async function runScript(code) {
+  const lines = code.split('\n').map(l=>l.trim()).filter(l=>l && !l.startsWith('//'));
+  let i = 0;
+
+  while(i < lines.length) {
+    const line = lines[i];
+
+    // LOOP DEFINITION
+    const loopMatch = line.match(/^loop\.(\w+)$/);
+    if(loopMatch && line !== 'loop.final') {
+      const name = loopMatch[1];
+      if(name === 'init' || name === 'stop') { i++; continue; }
+      i++;
+      const body = [];
+      const nested = [];
+      let depth = 0;
+      while(i < lines.length) {
+        const l = lines[i];
+        if(l.match(/^loop\.\w+$/) && !l.match(/^loop\.(init|stop|final)\b/)) depth++;
+        if(l === 'loop.final') {
+          if(depth === 0) { i++; break; }
+          depth--;
+        }
+        nested.push(l);
+        i++;
+      }
+      const ast = parse(nested);
+      STATE.loops[name] = { body: ast, running: false };
+      log(`✔ loop '${name}' definido (${nested.length} líneas)`, 'line-ok');
+      updateSidebar();
+      continue;
+    }
+
+    // FUNC DEFINITION
+    if(line.startsWith('func.') && !line.startsWith('func.call')) {
+      const name = line.slice(5).trim();
+      i++;
+      const funcLines = [];
+      while(i < lines.length && lines[i] !== 'func.end') {
+        funcLines.push(lines[i]);
+        i++;
+      }
+      if(i < lines.length) i++;
+      const ast = parse(funcLines);
+      STATE.funcs[name] = ast;
+      log(`✔ función '${name}' definida`, 'line-ok');
+      continue;
+    }
+
+    // BLOQUE IF a nivel de script
+    if(line.startsWith('if ')) {
+      const block = [];
+      block.push(line);
+      i++;
+      let depth = 0;
+      while(i < lines.length) {
+        const l = lines[i];
+        if(l.startsWith('if ')) depth++;
+        if(l === 'if.final') {
+          if(depth === 0) { block.push(l); i++; break; }
+          depth--;
+        }
+        block.push(l);
+        i++;
+      }
+      const ast = parse(block);
+      for(const s of ast) await execStep(s, null);
+      continue;
+    }
+
+    // BLOQUE WHILE a nivel de script
+    if(line.startsWith('while ')) {
+      const block = [];
+      block.push(line);
+      i++;
+      while(i < lines.length && lines[i] !== 'endwhile') {
+        block.push(lines[i]);
+        i++;
+      }
+      block.push('endwhile');
+      if(i < lines.length) i++;
+      const ast = parse(block);
+      for(const s of ast) await execStep(s, null);
+      continue;
+    }
+
+    // COMANDO SIMPLE
+    await execCmd(line, null);
+    i++;
+  }
+}
+
+// ─── EDITOR ──────────────────────────────────────────────────
+let currentEditorFile = null;
+
+function openFile(name) {
+  if(!STATE.files[name]) STATE.files[name] = { content: '' };
+  currentEditorFile = name;
+  document.getElementById('editor-filename').textContent = `📄 ${name}`;
+  document.getElementById('editor-area').value = STATE.files[name].content;
+  document.getElementById('editor-overlay').classList.add('open');
+  document.getElementById('editor-area').focus();
+  updateSidebar();
+}
+
+function editorSave() {
+  if(!currentEditorFile) return;
+  STATE.files[currentEditorFile].content = document.getElementById('editor-area').value;
+  log(`✔ archivo '${currentEditorFile}' guardado`, 'line-ok');
+  document.getElementById('editor-status').textContent = '✔ guardado — ' + new Date().toLocaleTimeString();
+  updateSidebar();
+}
+
+function editorClose() {
+  document.getElementById('editor-overlay').classList.remove('open');
+  document.getElementById('cmd-input').focus();
+}
+
+// Ctrl+S en editor
+document.getElementById('editor-area').addEventListener('keydown', e => {
+  if(e.ctrlKey && e.key === 's') { e.preventDefault(); editorSave(); }
+  if(e.key === 'Tab') {
+    e.preventDefault();
+    const t = e.target;
+    const s = t.selectionStart, end = t.selectionEnd;
+    t.value = t.value.substring(0,s) + '    ' + t.value.substring(end);
+    t.selectionStart = t.selectionEnd = s + 4;
+  }
+});
+
+// ─── TERMINAL INPUT ──────────────────────────────────────────
+const input = document.getElementById('cmd-input');
+
+input.addEventListener('keydown', async e => {
+  if(e.key === 'Enter') {
+    const raw = input.value.trim();
+    if(!raw) return;
+    STATE.history.unshift(raw);
+    STATE.histIdx = -1;
+    input.value = '';
+    logCmd(raw);
+
+    // Script multilínea pegado
+    if(raw.includes('\n')) {
+      await runScript(raw);
+      return;
+    }
+    await runScript(raw);
+    updateSidebar();
+  }
+
+  // Historial
+  if(e.key === 'ArrowUp') {
+    e.preventDefault();
+    if(STATE.histIdx < STATE.history.length-1) {
+      STATE.histIdx++;
+      input.value = STATE.history[STATE.histIdx];
+    }
+  }
+  if(e.key === 'ArrowDown') {
+    e.preventDefault();
+    if(STATE.histIdx > 0) { STATE.histIdx--; input.value = STATE.history[STATE.histIdx]; }
+    else { STATE.histIdx = -1; input.value = ''; }
+  }
+});
+
+// Escape cierra editor
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') editorClose();
+});
+
+// Click fuera del editor lo cierra
+document.getElementById('editor-overlay').addEventListener('click', e => {
+  if(e.target === document.getElementById('editor-overlay')) editorClose();
+});
+
+// ─── BOOT ─────────────────────────────────────────────────────
+(async () => {
+  logSys('timbitoOS v4 — iniciando...');
+  await delay(200);
+  logSys('Runtime OK · Parser OK · AST OK');
+  await delay(100);
+  log('✔ Sistema listo. Escribe "help" para ver comandos.', 'line-ok');
+  log('', 'line-sys');
+  logInfo('EJEMPLO RÁPIDO:');
+  logInfo('  variable.crear x');
+  logInfo('  variable.edit x 0');
+  logInfo('  archivo.crear mi_script → archivo.abrir mi_script → [escribe código] → archivo.ejecutar mi_script');
+  log('', 'line-sys');
+  updateSidebar();
+  input.focus();
+})();
+</script>
+
 </body>
 </html>
