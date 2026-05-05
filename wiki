@@ -1,0 +1,187 @@
+Aquí tienes un mini manual tipo wiki de usuario para tu proyecto timbitoHome, listo para pegar en tu informe o repositorio.
+
+⸻
+
+WIKI DE USUARIO – timbitoHome
+
+1. Descripción del sistema
+
+timbitoHome es un sistema de automatización doméstica que permite controlar dispositivos eléctricos mediante una interfaz web tipo terminal conectada a un ESP32 en red local WiFi.
+
+El usuario interactúa escribiendo comandos desde su teléfono o computadora, y el sistema responde ejecutando acciones en tiempo real.
+
+⸻
+
+2. Requisitos de uso
+
+Para utilizar el sistema correctamente se necesita:
+
+* ESP32 configurado y conectado a la red WiFi
+* Dispositivos eléctricos conectados a los pines del ESP32
+* Teléfono o computadora en la misma red WiFi
+* Navegador web moderno (Chrome, Safari, etc.)
+
+⸻
+
+3. Acceso al sistema
+
+El acceso se realiza mediante una dirección IP local, por ejemplo:
+
+http://192.168.x.x
+
+Esta IP es proporcionada por el ESP32 al conectarse a la red.
+
+⸻
+
+4. Interfaz del sistema (timbitoOS)
+
+La interfaz está basada en un sistema tipo terminal. El usuario debe escribir comandos en una consola virtual.
+
+No existen botones tradicionales, todo se controla mediante texto.
+
+⸻
+
+5. Comandos principales
+
+Encender dispositivo
+
+Activa un pin o dispositivo conectado.
+
+on 1
+
+Ejemplo:
+
+on 1
+
+Enciende el dispositivo conectado al pin 1.
+
+⸻
+
+Apagar dispositivo
+
+Desactiva un dispositivo conectado.
+
+off 1
+
+Ejemplo:
+
+off 1
+
+⸻
+
+Estado del sistema
+
+Permite consultar el estado de los dispositivos.
+
+status
+
+Muestra qué dispositivos están encendidos o apagados.
+
+⸻
+
+Reiniciar sistema
+
+Reinicia la conexión o el estado lógico del sistema.
+
+restart
+
+⸻
+
+Ayuda
+
+Muestra los comandos disponibles.
+
+help
+
+⸻
+
+6. Funcionamiento interno
+
+El sistema funciona en dos partes:
+
+* Interfaz web: envía comandos escritos por el usuario
+* ESP32: recibe los comandos y ejecuta acciones físicas en los pines
+
+La comunicación se realiza mediante solicitudes HTTP dentro de la red local.
+
+⸻
+
+7. Flujo de uso
+
+1. El usuario abre la interfaz desde el navegador
+2. Escribe un comando en la terminal
+3. El sistema envía la orden al ESP32
+4. El ESP32 ejecuta la acción
+5. Se muestra una respuesta en pantalla
+
+⸻
+
+8. Mensajes del sistema
+
+El sistema puede mostrar los siguientes tipos de mensajes:
+
+* “Comando ejecutado correctamente”
+* “Dispositivo encendido”
+* “Dispositivo apagado”
+* “Error: comando no reconocido”
+* “Error de conexión con ESP32”
+
+⸻
+
+9. Solución de problemas
+
+El sistema no responde
+
+* Verificar conexión WiFi
+* Confirmar que el ESP32 esté encendido
+* Revisar la IP correcta
+
+⸻
+
+Los comandos no funcionan
+
+* Verificar escritura correcta
+* Usar comandos en minúsculas
+* Revisar conexión con el servidor
+
+⸻
+
+No carga la interfaz
+
+* Revisar si el servidor local está activo
+* Confirmar que el archivo HTML esté sirviéndose correctamente
+
+⸻
+
+10. Limitaciones del sistema
+
+* Solo funciona dentro de la misma red WiFi
+* Depende del estado del ESP32
+* No tiene acceso remoto por internet (versión actual)
+* Capacidad limitada según memoria del microcontrolador
+
+⸻
+
+11. Posibles mejoras futuras
+
+* Control desde internet (modo remoto)
+* Aplicación móvil dedicada
+* Interfaz gráfica además de terminal
+* Automatización basada en sensores
+* Integración con asistentes de voz
+
+⸻
+
+12. Conclusión
+
+timbitoHome es un sistema funcional de automatización doméstica que demuestra cómo la tecnología IoT puede implementarse de forma sencilla y económica. Su diseño basado en comandos lo hace ligero, flexible y fácil de expandir en el futuro.
+
+⸻
+
+Si quieres, puedo hacerte también:
+
+* ￼ versión en PDF con diseño pro
+* ￼ portada tipo colegio
+* o ￼ una wiki estilo GitHub README más estética
+
+Solo dime.
